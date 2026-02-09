@@ -1,0 +1,243 @@
+/* ForteAI Chat Widget Styles */
+
+.forteai-container {
+    position: fixed;
+    z-index: 99999;
+    bottom: 20px;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+    font-size: 14px;
+}
+
+.forteai-right {
+    right: 20px;
+}
+
+.forteai-left {
+    left: 20px;
+}
+
+/* Floating Action Button */
+.forteai-fab {
+    width: 56px;
+    height: 56px;
+    border-radius: 50%;
+    background: #0066cc;
+    color: #fff;
+    border: none;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+    transition: transform 0.2s, box-shadow 0.2s;
+}
+
+.forteai-fab:hover {
+    transform: scale(1.05);
+    box-shadow: 0 6px 16px rgba(0, 0, 0, 0.25);
+}
+
+/* Chat Panel */
+.forteai-chat-panel {
+    width: 380px;
+    height: 520px;
+    background: #fff;
+    border-radius: 12px;
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.15);
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+}
+
+/* Header */
+.forteai-header {
+    background: #0066cc;
+    color: #fff;
+    padding: 14px 16px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    flex-shrink: 0;
+}
+
+.forteai-title {
+    font-weight: 600;
+    font-size: 15px;
+}
+
+.forteai-close {
+    background: none;
+    border: none;
+    color: #fff;
+    font-size: 22px;
+    cursor: pointer;
+    padding: 0;
+    line-height: 1;
+    opacity: 0.8;
+}
+
+.forteai-close:hover {
+    opacity: 1;
+}
+
+/* Messages */
+.forteai-messages {
+    flex: 1;
+    overflow-y: auto;
+    padding: 16px;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+.forteai-msg {
+    max-width: 85%;
+    animation: forteai-fade-in 0.2s ease-out;
+}
+
+.forteai-msg-user {
+    align-self: flex-end;
+}
+
+.forteai-msg-assistant {
+    align-self: flex-start;
+}
+
+.forteai-msg-text {
+    padding: 10px 14px;
+    border-radius: 12px;
+    line-height: 1.5;
+    word-wrap: break-word;
+}
+
+.forteai-msg-user .forteai-msg-text {
+    background: #0066cc;
+    color: #fff;
+    border-bottom-right-radius: 4px;
+}
+
+.forteai-msg-assistant .forteai-msg-text {
+    background: #f0f0f0;
+    color: #333;
+    border-bottom-left-radius: 4px;
+}
+
+.forteai-msg-sources {
+    font-size: 11px;
+    color: #888;
+    margin-top: 4px;
+    padding-left: 4px;
+}
+
+/* Starter Questions */
+.forteai-starters {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+    padding: 4px 0;
+}
+
+.forteai-starter-btn {
+    background: #e8f0fe;
+    color: #0066cc;
+    border: 1px solid #c4d9f2;
+    border-radius: 16px;
+    padding: 6px 12px;
+    font-size: 12px;
+    cursor: pointer;
+    transition: background 0.2s;
+}
+
+.forteai-starter-btn:hover {
+    background: #d0e2f7;
+}
+
+/* Typing Indicator */
+.forteai-typing .forteai-msg-text {
+    display: flex;
+    gap: 4px;
+    padding: 12px 18px;
+}
+
+.forteai-dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background: #999;
+    animation: forteai-bounce 1.4s infinite;
+}
+
+.forteai-dot:nth-child(2) {
+    animation-delay: 0.2s;
+}
+
+.forteai-dot:nth-child(3) {
+    animation-delay: 0.4s;
+}
+
+/* Input Area */
+.forteai-input-area {
+    display: flex;
+    padding: 12px;
+    border-top: 1px solid #eee;
+    gap: 8px;
+    flex-shrink: 0;
+}
+
+.forteai-input-area input {
+    flex: 1;
+    border: 1px solid #ddd;
+    border-radius: 8px;
+    padding: 10px 12px;
+    font-size: 14px;
+    outline: none;
+    font-family: inherit;
+}
+
+.forteai-input-area input:focus {
+    border-color: #0066cc;
+}
+
+.forteai-input-area button {
+    background: #0066cc;
+    color: #fff;
+    border: none;
+    border-radius: 8px;
+    padding: 10px 14px;
+    cursor: pointer;
+    font-size: 14px;
+    transition: background 0.2s;
+}
+
+.forteai-input-area button:hover {
+    background: #0052a3;
+}
+
+/* Animations */
+@keyframes forteai-fade-in {
+    from {
+        opacity: 0;
+        transform: translateY(8px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+@keyframes forteai-bounce {
+    0%, 60%, 100% {
+        transform: translateY(0);
+    }
+    30% {
+        transform: translateY(-6px);
+    }
+}
+
+/* Responsive */
+@media (max-width: 480px) {
+    .forteai-chat-panel {
+        width: calc(100vw - 40px);
+        height: calc(100vh - 100px);
+    }
+}

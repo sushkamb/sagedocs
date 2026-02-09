@@ -1,0 +1,288 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ForteAI - Admin Dashboard</title>
+    <style>
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; background: #f5f6fa; color: #333; }
+        .header { background: #0066cc; color: #fff; padding: 16px 24px; display: flex; align-items: center; gap: 12px; }
+        .header h1 { font-size: 20px; font-weight: 600; }
+        .container { max-width: 1000px; margin: 24px auto; padding: 0 24px; }
+        .card { background: #fff; border-radius: 8px; box-shadow: 0 1px 4px rgba(0,0,0,0.08); padding: 24px; margin-bottom: 20px; }
+        .card h2 { font-size: 16px; font-weight: 600; margin-bottom: 16px; color: #333; }
+        .form-group { margin-bottom: 16px; }
+        .form-group label { display: block; font-weight: 500; margin-bottom: 6px; font-size: 13px; color: #555; }
+        .form-group input, .form-group select { width: 100%; padding: 10px 12px; border: 1px solid #ddd; border-radius: 6px; font-size: 14px; }
+        .form-group input:focus, .form-group select:focus { border-color: #0066cc; outline: none; }
+        .btn { padding: 10px 20px; border: none; border-radius: 6px; font-size: 14px; cursor: pointer; font-weight: 500; }
+        .btn-primary { background: #0066cc; color: #fff; }
+        .btn-primary:hover { background: #0052a3; }
+        .btn-danger { background: #dc3545; color: #fff; }
+        .btn-danger:hover { background: #c82333; }
+        .doc-list { list-style: none; }
+        .doc-item { display: flex; justify-content: space-between; align-items: center; padding: 12px 0; border-bottom: 1px solid #eee; }
+        .doc-item:last-child { border-bottom: none; }
+        .doc-info { display: flex; flex-direction: column; gap: 2px; }
+        .doc-title { font-weight: 500; }
+        .doc-meta { font-size: 12px; color: #888; }
+        .upload-area { border: 2px dashed #ccc; border-radius: 8px; padding: 32px; text-align: center; color: #888; cursor: pointer; transition: border-color 0.2s; }
+        .upload-area:hover { border-color: #0066cc; }
+        .stats { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; }
+        .stat-box { text-align: center; padding: 16px; }
+        .stat-number { font-size: 32px; font-weight: 700; color: #0066cc; }
+        .stat-label { font-size: 13px; color: #888; margin-top: 4px; }
+        .empty-state { text-align: center; padding: 32px; color: #888; }
+        .tab-bar { display: flex; gap: 0; margin-bottom: 20px; border-bottom: 2px solid #eee; }
+        .tab-btn { padding: 10px 20px; background: none; border: none; cursor: pointer; font-size: 14px; font-weight: 500; color: #888; border-bottom: 2px solid transparent; margin-bottom: -2px; }
+        .tab-btn.active { color: #0066cc; border-bottom-color: #0066cc; }
+        .tab-content { display: none; }
+        .tab-content.active { display: block; }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>ForteAI Admin</h1>
+    </div>
+
+    <div class="container">
+        <div class="card">
+            <div class="form-group">
+                <label>Tenant</label>
+                <select id="tenantSelect">
+                    <option value="">Select a tenant...</option>
+                </select>
+            </div>
+        </div>
+
+        <div class="tab-bar">
+            <button class="tab-btn active" data-tab="documents">Documents</button>
+            <button class="tab-btn" data-tab="test">Test Chat</button>
+            <button class="tab-btn" data-tab="analytics">Analytics</button>
+        </div>
+
+        <!-- Documents Tab -->
+        <div class="tab-content active" id="tab-documents">
+            <div class="card">
+                <h2>Upload Document</h2>
+                <div class="form-group">
+                    <label>Document Title</label>
+                    <input type="text" id="docTitle" placeholder="e.g. Getting Started Guide" />
+                </div>
+                <div class="upload-area" id="uploadArea">
+                    <p>Drop a file here or click to browse</p>
+                    <p style="font-size: 12px; margin-top: 8px;">Supports PDF, HTML, Markdown, TXT</p>
+                    <input type="file" id="fileInput" style="display:none" accept=".pdf,.html,.htm,.md,.txt" />
+                </div>
+                <div style="margin-top: 12px;">
+                    <button class="btn btn-primary" id="uploadBtn">Upload & Index</button>
+                </div>
+            </div>
+
+            <div class="card">
+                <h2>Indexed Documents</h2>
+                <ul class="doc-list" id="docList">
+                    <li class="empty-state">No documents indexed yet</li>
+                </ul>
+            </div>
+        </div>
+
+        <!-- Test Chat Tab -->
+        <div class="tab-content" id="tab-test">
+            <div class="card" style="height: 500px; display: flex; flex-direction: column;">
+                <h2>Test Chat</h2>
+                <div id="testMessages" style="flex:1; overflow-y:auto; padding: 12px 0; display: flex; flex-direction: column; gap: 8px;"></div>
+                <div style="display:flex; gap:8px; margin-top: 12px;">
+                    <input type="text" id="testInput" placeholder="Ask a test question..." style="flex:1; padding:10px 12px; border:1px solid #ddd; border-radius:6px;" />
+                    <button class="btn btn-primary" id="testSend">Send</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Analytics Tab -->
+        <div class="tab-content" id="tab-analytics">
+            <div class="card">
+                <h2>Overview</h2>
+                <div class="stats">
+                    <div class="stat-box">
+                        <div class="stat-number" id="statTotal">0</div>
+                        <div class="stat-label">Total Questions</div>
+                    </div>
+                    <div class="stat-box">
+                        <div class="stat-number" id="statAnswered">0</div>
+                        <div class="stat-label">Answered</div>
+                    </div>
+                    <div class="stat-box">
+                        <div class="stat-number" id="statUnanswered">0</div>
+                        <div class="stat-label">Unanswered (Content Gaps)</div>
+                    </div>
+                </div>
+            </div>
+            <div class="card">
+                <h2>Unanswered Questions (Documentation Roadmap)</h2>
+                <ul class="doc-list" id="unansweredList">
+                    <li class="empty-state">No unanswered questions yet</li>
+                </ul>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        var API_BASE = window.location.origin;
+        var currentTenant = "";
+
+        // Tab switching
+        document.querySelectorAll(".tab-btn").forEach(function (btn) {
+            btn.addEventListener("click", function () {
+                document.querySelectorAll(".tab-btn").forEach(function (b) { b.classList.remove("active"); });
+                document.querySelectorAll(".tab-content").forEach(function (c) { c.classList.remove("active"); });
+                btn.classList.add("active");
+                document.getElementById("tab-" + btn.dataset.tab).classList.add("active");
+            });
+        });
+
+        // Upload area click
+        document.getElementById("uploadArea").addEventListener("click", function () {
+            document.getElementById("fileInput").click();
+        });
+
+        // Load tenants
+        fetch(API_BASE + "/api/tenants/")
+            .then(function (r) { return r.json(); })
+            .then(function (data) {
+                var sel = document.getElementById("tenantSelect");
+                (data.tenants || []).forEach(function (t) {
+                    var opt = document.createElement("option");
+                    opt.value = t.tenant_id;
+                    opt.textContent = t.display_name || t.tenant_id;
+                    sel.appendChild(opt);
+                });
+            });
+
+        document.getElementById("tenantSelect").addEventListener("change", function () {
+            currentTenant = this.value;
+            if (currentTenant) {
+                loadDocuments();
+                loadAnalytics();
+            }
+        });
+
+        function loadDocuments() {
+            fetch(API_BASE + "/api/documents/list?tenant=" + currentTenant)
+                .then(function (r) { return r.json(); })
+                .then(function (data) {
+                    var list = document.getElementById("docList");
+                    var docs = data.documents || [];
+                    if (docs.length === 0) {
+                        list.innerHTML = '<li class="empty-state">No documents indexed yet</li>';
+                        return;
+                    }
+                    list.innerHTML = "";
+                    docs.forEach(function (doc) {
+                        var li = document.createElement("li");
+                        li.className = "doc-item";
+                        li.innerHTML =
+                            '<div class="doc-info">' +
+                                '<span class="doc-title">' + doc.title + '</span>' +
+                                '<span class="doc-meta">' + doc.filename + ' | ' + doc.chunk_count + ' chunks</span>' +
+                            '</div>' +
+                            '<button class="btn btn-danger" onclick="deleteDoc(\'' + doc.filename + '\')">Delete</button>';
+                        list.appendChild(li);
+                    });
+                });
+        }
+
+        function deleteDoc(filename) {
+            if (!confirm("Delete " + filename + "?")) return;
+            fetch(API_BASE + "/api/documents/delete?tenant=" + currentTenant + "&filename=" + filename, { method: "DELETE" })
+                .then(function () { loadDocuments(); });
+        }
+
+        // Upload
+        document.getElementById("uploadBtn").addEventListener("click", function () {
+            var file = document.getElementById("fileInput").files[0];
+            var title = document.getElementById("docTitle").value.trim();
+            if (!file || !title || !currentTenant) {
+                alert("Please select a tenant, enter a title, and choose a file.");
+                return;
+            }
+            var fd = new FormData();
+            fd.append("file", file);
+            fd.append("tenant", currentTenant);
+            fd.append("title", title);
+
+            fetch(API_BASE + "/api/documents/upload", { method: "POST", body: fd })
+                .then(function (r) { return r.json(); })
+                .then(function (data) {
+                    alert(data.message);
+                    document.getElementById("docTitle").value = "";
+                    document.getElementById("fileInput").value = "";
+                    loadDocuments();
+                });
+        });
+
+        // Test chat
+        document.getElementById("testSend").addEventListener("click", sendTestMessage);
+        document.getElementById("testInput").addEventListener("keydown", function (e) {
+            if (e.key === "Enter") sendTestMessage();
+        });
+
+        function sendTestMessage() {
+            var input = document.getElementById("testInput");
+            var msg = input.value.trim();
+            if (!msg || !currentTenant) return;
+            input.value = "";
+
+            var messagesEl = document.getElementById("testMessages");
+            messagesEl.innerHTML += '<div style="align-self:flex-end; background:#0066cc; color:#fff; padding:8px 12px; border-radius:8px; max-width:80%;">' + msg + '</div>';
+
+            fetch(API_BASE + "/api/chat/help", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ tenant: currentTenant, message: msg })
+            })
+            .then(function (r) { return r.json(); })
+            .then(function (data) {
+                var sources = data.sources && data.sources.length > 0
+                    ? '<div style="font-size:11px; color:#888; margin-top:4px;">Sources: ' + data.sources.map(function(s) { return s.title; }).join(", ") + '</div>'
+                    : "";
+                messagesEl.innerHTML += '<div style="align-self:flex-start; background:#f0f0f0; padding:8px 12px; border-radius:8px; max-width:80%;">' + data.reply + sources + '</div>';
+                messagesEl.scrollTop = messagesEl.scrollHeight;
+            });
+        }
+
+        function loadAnalytics() {
+            fetch(API_BASE + "/api/analytics/summary?tenant=" + currentTenant)
+                .then(function (r) { return r.json(); })
+                .then(function (data) {
+                    document.getElementById("statTotal").textContent = data.total || 0;
+                    document.getElementById("statAnswered").textContent = data.answered || 0;
+                    document.getElementById("statUnanswered").textContent = data.unanswered || 0;
+                });
+
+            fetch(API_BASE + "/api/analytics/questions?tenant=" + currentTenant + "&unanswered_only=true")
+                .then(function (r) { return r.json(); })
+                .then(function (data) {
+                    var list = document.getElementById("unansweredList");
+                    var questions = data.questions || [];
+                    if (questions.length === 0) {
+                        list.innerHTML = '<li class="empty-state">No unanswered questions yet</li>';
+                        return;
+                    }
+                    list.innerHTML = "";
+                    questions.slice(0, 50).forEach(function (q) {
+                        var li = document.createElement("li");
+                        li.className = "doc-item";
+                        li.innerHTML =
+                            '<div class="doc-info">' +
+                                '<span class="doc-title">' + q.question + '</span>' +
+                                '<span class="doc-meta">' + q.timestamp + '</span>' +
+                            '</div>';
+                        list.appendChild(li);
+                    });
+                });
+        }
+    </script>
+</body>
+</html>

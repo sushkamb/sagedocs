@@ -1,0 +1,122 @@
+# ForteAI Tool Registry — ChiroCloud
+# Each tool maps to a read-only API endpoint in ChiroCloud
+
+base_url: https://api.chirocloud.com
+
+tools:
+  - name: get_patient_count
+    description: "Get the number of patients for a date range, optionally filtered by status (new, active, inactive)"
+    endpoint: /api/assistant/patients/count
+    method: GET
+    parameters:
+      - name: date_from
+        type: string
+        required: true
+        description: "Start date (YYYY-MM-DD format)"
+      - name: date_to
+        type: string
+        required: true
+        description: "End date (YYYY-MM-DD format)"
+      - name: status
+        type: string
+        required: false
+        enum: [new, active, inactive]
+        description: "Patient status filter"
+    response_hint: "Returns { count: number }"
+
+  - name: get_appointments_today
+    description: "Get the count and list of appointments for today or a specific date"
+    endpoint: /api/assistant/appointments
+    method: GET
+    parameters:
+      - name: date
+        type: string
+        required: false
+        description: "Date to check (YYYY-MM-DD). Defaults to today."
+      - name: doctor_name
+        type: string
+        required: false
+        description: "Filter by doctor name"
+    response_hint: "Returns { count, appointments: [{ time, patient_name, visit_type, status }] }"
+
+  - name: get_aging_claims
+    description: "Get unpaid insurance claims grouped by aging buckets (30, 60, 90, 120+ days)"
+    endpoint: /api/assistant/claims/aging
+    method: GET
+    parameters:
+      - name: payer_name
+        type: string
+        required: false
+        description: "Filter by insurance company name"
+    response_hint: "Returns array of { bucket, count, total_amount }"
+
+  - name: get_provider_schedule
+    description: "Get a doctor's full schedule for a specific date"
+    endpoint: /api/assistant/schedule
+    method: GET
+    parameters:
+      - name: doctor_name
+        type: string
+        required: true
+        description: "Doctor's name"
+      - name: date
+        type: string
+        required: true
+        description: "The date to check (YYYY-MM-DD format)"
+    response_hint: "Returns array of { time, patient_name, visit_type, status }"
+
+  - name: get_patient_birthdays
+    description: "Get patients with birthdays in a date range"
+    endpoint: /api/assistant/patients/birthdays
+    method: GET
+    parameters:
+      - name: date_from
+        type: string
+        required: true
+        description: "Start date (YYYY-MM-DD)"
+      - name: date_to
+        type: string
+        required: true
+        description: "End date (YYYY-MM-DD)"
+    response_hint: "Returns array of { patient_name, birthday, age }"
+
+  - name: get_collection_summary
+    description: "Get payment collection summary for a date range"
+    endpoint: /api/assistant/collections/summary
+    method: GET
+    parameters:
+      - name: date_from
+        type: string
+        required: true
+        description: "Start date (YYYY-MM-DD)"
+      - name: date_to
+        type: string
+        required: true
+        description: "End date (YYYY-MM-DD)"
+    response_hint: "Returns { total_collected, insurance_payments, patient_payments, count }"
+
+  - name: get_open_balances
+    description: "Get patients with outstanding balances, sorted by amount descending"
+    endpoint: /api/assistant/patients/balances
+    method: GET
+    parameters:
+      - name: min_amount
+        type: number
+        required: false
+        description: "Minimum balance amount to filter"
+      - name: limit
+        type: integer
+        required: false
+        description: "Max number of results (default 20)"
+    response_hint: "Returns array of { patient_name, balance, last_visit_date }"
+
+  - name: search_patient
+    description: "Search for a patient by name and get their basic info and next appointment"
+    endpoint: /api/assistant/patients/search
+    method: GET
+    parameters:
+      - name: name
+        type: string
+        required: true
+        description: "Patient name to search for (first, last, or full name)"
+    response_hint: "Returns array of { patient_name, dob, phone, next_appointment, balance }"
