@@ -1,12 +1,13 @@
 # ForteAI Tool Registry — ChiroCloud
 # Each tool maps to a read-only API endpoint in ChiroCloud
+# Endpoint convention: /api/{Controller}/{Action} (PascalCase)
 
-base_url: https://api.chirocloud.com
+base_url: https://my.turncloud.com:4132
 
 tools:
   - name: get_patient_count
     description: "Get the number of patients for a date range, optionally filtered by status (new, active, inactive)"
-    endpoint: /api/assistant/patients/count
+    endpoint: /api/Assistant/GetPatientCount
     method: GET
     parameters:
       - name: date_from
@@ -26,7 +27,7 @@ tools:
 
   - name: get_appointments_today
     description: "Get the count and list of appointments for today or a specific date"
-    endpoint: /api/assistant/appointments
+    endpoint: /api/Assistant/GetAppointments
     method: GET
     parameters:
       - name: date
@@ -41,7 +42,7 @@ tools:
 
   - name: get_aging_claims
     description: "Get unpaid insurance claims grouped by aging buckets (30, 60, 90, 120+ days)"
-    endpoint: /api/assistant/claims/aging
+    endpoint: /api/Assistant/GetAgingClaims
     method: GET
     parameters:
       - name: payer_name
@@ -52,7 +53,7 @@ tools:
 
   - name: get_provider_schedule
     description: "Get a doctor's full schedule for a specific date"
-    endpoint: /api/assistant/schedule
+    endpoint: /api/Assistant/GetProviderSchedule
     method: GET
     parameters:
       - name: doctor_name
@@ -67,7 +68,7 @@ tools:
 
   - name: get_patient_birthdays
     description: "Get patients with birthdays in a date range"
-    endpoint: /api/assistant/patients/birthdays
+    endpoint: /api/Assistant/GetPatientBirthdays
     method: GET
     parameters:
       - name: date_from
@@ -82,7 +83,7 @@ tools:
 
   - name: get_collection_summary
     description: "Get payment collection summary for a date range"
-    endpoint: /api/assistant/collections/summary
+    endpoint: /api/Assistant/GetCollectionSummary
     method: GET
     parameters:
       - name: date_from
@@ -97,7 +98,7 @@ tools:
 
   - name: get_open_balances
     description: "Get patients with outstanding balances, sorted by amount descending"
-    endpoint: /api/assistant/patients/balances
+    endpoint: /api/Assistant/GetOpenBalances
     method: GET
     parameters:
       - name: min_amount
@@ -112,7 +113,7 @@ tools:
 
   - name: search_patient
     description: "Search for a patient by name and get their basic info and next appointment"
-    endpoint: /api/assistant/patients/search
+    endpoint: /api/Assistant/SearchPatient
     method: GET
     parameters:
       - name: name

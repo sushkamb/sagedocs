@@ -15,7 +15,7 @@ class RAGEngine:
             settings=ChromaSettings(anonymized_telemetry=False),
         )
         self.doc_processor = DocumentProcessor()
-        self.llm = LLMService()
+        self.llm = LLMService(model=settings.llm_model_fast)  # Use fast model for help queries
 
     def _get_collection(self, tenant: str):
         """Get or create a ChromaDB collection for a tenant."""
