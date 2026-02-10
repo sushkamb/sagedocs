@@ -4,6 +4,7 @@ from fastapi import APIRouter, HTTPException
 from app.models.schemas import ChatRequest, ChatResponse
 from app.services.rag_engine import RAGEngine
 from app.services.query_engine import QueryEngine
+from app.routers.analytics import log_question
 
 router = APIRouter(prefix="/api/chat", tags=["Chat"])
 
@@ -24,6 +25,9 @@ async def chat(request: ChatRequest):
         # Help mode only
         result = rag_engine.query(request.tenant, request.message)
 
+    answered = bool(result.get("sources")) or bool(result.get("reply"))
+    log_question(request.tenant, request.message, answered)
+
     return ChatResponse(
         reply=result["reply"],
         sources=result.get("sources", []),
@@ -37,6 +41,9 @@ async def chat_help(request: ChatRequest):
 
     session_id = request.session_id or str(uuid.uuid4())
     result = rag_engine.query(request.tenant, request.message)
+
+    answered = bool(result.get("sources"))
+    log_question(request.tenant, request.message, answered)
 
     return ChatResponse(
         reply=result["reply"],
@@ -60,6 +67,9 @@ async def chat_data(request: ChatRequest):
         account_number=request.account_number,
         token=request.token,
     )
+
+    answered = bool(result.get("reply"))
+    log_question(request.tenant, request.message, answered)
 
     return ChatResponse(
         reply=result["reply"],
