@@ -1,9 +1,14 @@
+import re
+
 import chromadb
 from chromadb.config import Settings as ChromaSettings
 
 from app.config import settings
 from app.services.llm_service import LLMService
 from app.services.document_processor import DocumentProcessor
+
+# Pattern to extract image filenames from [Screenshot: filename | description] markers
+SCREENSHOT_PATTERN = re.compile(r"\[Screenshot:\s*(img_[a-f0-9]+\.\w+)\s*\|")
 
 
 class RAGEngine:
@@ -74,9 +79,10 @@ class RAGEngine:
                 "sources": [],
             }
 
-        # Build context from retrieved chunks
+        # Build context from retrieved chunks and collect image references
         context_parts = []
         sources = []
+        image_filenames = []
         for i, doc in enumerate(results["documents"][0]):
             meta = results["metadatas"][0][i]
             context_parts.append(f"[Source: {meta.get('title', 'Unknown')}]\n{doc}")
@@ -85,6 +91,11 @@ class RAGEngine:
                 "filename": meta.get("filename", ""),
                 "chunk_index": meta.get("chunk_index", 0),
             })
+            # Extract image filenames from [Screenshot: filename | description] markers
+            for match in SCREENSHOT_PATTERN.finditer(doc):
+                img_file = match.group(1)
+                if img_file not in image_filenames:
+                    image_filenames.append(img_file)
 
         context = "\n\n---\n\n".join(context_parts)
 
@@ -92,7 +103,10 @@ class RAGEngine:
             "You are ForteAI, a helpful assistant. Answer the user's question "
             "using ONLY the following documentation. If the answer is not in the "
             "documentation, say so clearly and suggest contacting support.\n\n"
-            "Be concise and direct. Use bullet points for step-by-step instructions.\n\n"
+            "Be concise and direct. Use bullet points for step-by-step instructions. "
+            "The documentation may include [Screenshot: ...] markers describing UI screenshots. "
+            "Use those descriptions to give specific visual guidance (e.g. 'click the Save button "
+            "in the top-right corner').\n\n"
             f"Documentation:\n{context}"
         )
 
@@ -107,9 +121,15 @@ class RAGEngine:
                 seen.add(key)
                 unique_sources.append(s)
 
+        # Build image URLs
+        image_urls = [
+            f"/data/images/{tenant}/{img}" for img in image_filenames
+        ]
+
         return {
             "reply": result["reply"],
             "sources": unique_sources,
+            "images": image_urls,
         }
 
     def get_document_list(self, tenant: str) -> list[dict]:

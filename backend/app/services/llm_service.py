@@ -1,3 +1,5 @@
+import base64
+
 from openai import OpenAI
 from app.config import settings
 
@@ -89,6 +91,40 @@ class LLMService:
                 "input_schema": func["parameters"],
             })
         return anthropic_tools
+
+    def describe_image(self, image_bytes: bytes, context: str = "") -> str:
+        """Describe a screenshot/image using GPT-5.2 vision. Returns text description."""
+        b64 = base64.b64encode(image_bytes).decode("utf-8")
+        data_url = f"data:image/png;base64,{b64}"
+
+        prompt = (
+            "You are describing a screenshot from a software help document. "
+            "Describe what the screenshot shows in detail: UI elements, buttons, "
+            "form fields, labels, menus, highlighted areas, and any visible text. "
+            "Be specific about layout and element positions (top-right, sidebar, etc). "
+            "Keep the description to 2-4 sentences."
+        )
+        if context:
+            prompt += f"\n\nSurrounding text context: {context}"
+
+        try:
+            client = OpenAI(api_key=settings.openai_api_key)
+            response = client.chat.completions.create(
+                model=settings.llm_model,
+                messages=[
+                    {
+                        "role": "user",
+                        "content": [
+                            {"type": "text", "text": prompt},
+                            {"type": "image_url", "image_url": {"url": data_url}},
+                        ],
+                    }
+                ],
+                max_tokens=300,
+            )
+            return response.choices[0].message.content.strip()
+        except Exception as e:
+            return f"[Image could not be described: {e}]"
 
     def get_embedding(self, text: str) -> list[float]:
         """Get embedding vector for text. Uses OpenAI embeddings regardless of chat provider."""

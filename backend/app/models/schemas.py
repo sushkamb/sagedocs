@@ -14,6 +14,7 @@ class ChatRequest(BaseModel):
 class ChatResponse(BaseModel):
     reply: str
     sources: list[dict] = []
+    images: list[str] = []
     session_id: str
 
 

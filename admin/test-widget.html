@@ -1,0 +1,17 @@
+<!DOCTYPE html>
+<html>
+<head><title>ForteAI Widget Test</title></head>
+<body>
+  <h1>ForteAI Widget Test Page</h1>
+  <p>The chat widget should appear in the bottom-right corner.</p>
+  <p>Try asking: "How do I add a new patient?" or "How do I submit a claim?"</p>
+
+  <script src="http://localhost:8100/widget/forteai-widget.js"></script>
+  <script>
+    ForteAI.init({
+      tenant: 'chirocloud',
+      apiUrl: 'http://localhost:8100'
+    });
+  </script>
+</body>
+</html>

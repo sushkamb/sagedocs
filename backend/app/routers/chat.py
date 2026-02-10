@@ -31,6 +31,7 @@ async def chat(request: ChatRequest):
     return ChatResponse(
         reply=result["reply"],
         sources=result.get("sources", []),
+        images=result.get("images", []),
         session_id=session_id,
     )
 
@@ -48,6 +49,7 @@ async def chat_help(request: ChatRequest):
     return ChatResponse(
         reply=result["reply"],
         sources=result.get("sources", []),
+        images=result.get("images", []),
         session_id=session_id,
     )
 
@@ -74,6 +76,7 @@ async def chat_data(request: ChatRequest):
     return ChatResponse(
         reply=result["reply"],
         sources=result.get("sources", []),
+        images=result.get("images", []),
         session_id=session_id,
     )
 

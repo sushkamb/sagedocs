@@ -86,6 +86,7 @@
             this.container.className = "forteai-container " + posClass;
             this.container.innerHTML =
                 '<div class="forteai-chat-panel" id="forteai-panel" style="display:none;">' +
+                    '<div class="forteai-resize-handle" id="forteai-resize-handle"></div>' +
                     '<div class="forteai-header">' +
                         '<span class="forteai-title">ForteAI Assistant</span>' +
                         '<button class="forteai-close" id="forteai-close">&times;</button>' +
@@ -124,6 +125,36 @@
             });
             document.getElementById("forteai-input").addEventListener("keydown", function (e) {
                 if (e.key === "Enter") self._sendMessage();
+            });
+
+            // Resize drag logic
+            var resizeHandle = document.getElementById("forteai-resize-handle");
+            var panel = document.getElementById("forteai-panel");
+            var isResizing = false;
+            var startX, startY, startW, startH;
+
+            resizeHandle.addEventListener("mousedown", function (e) {
+                isResizing = true;
+                startX = e.clientX;
+                startY = e.clientY;
+                startW = panel.offsetWidth;
+                startH = panel.offsetHeight;
+                e.preventDefault();
+            });
+
+            document.addEventListener("mousemove", function (e) {
+                if (!isResizing) return;
+                var isLeft = self.config.position === "bottom-left";
+                var dw = isLeft ? (e.clientX - startX) : (startX - e.clientX);
+                var dh = startY - e.clientY;
+                var newW = Math.max(320, Math.min(700, startW + dw));
+                var newH = Math.max(400, Math.min(800, startH + dh));
+                panel.style.width = newW + "px";
+                panel.style.height = newH + "px";
+            });
+
+            document.addEventListener("mouseup", function () {
+                isResizing = false;
             });
         },
 
@@ -167,15 +198,66 @@
             }
         },
 
-        _addMessage: function (role, text, sources) {
+        _formatMarkdown: function (text) {
+            var html = text
+                // Escape HTML entities first
+                .replace(/&/g, "&amp;")
+                .replace(/</g, "&lt;")
+                .replace(/>/g, "&gt;")
+                // Code blocks (```)
+                .replace(/```([\s\S]*?)```/g, '<pre class="forteai-code-block">$1</pre>')
+                // Inline code
+                .replace(/`([^`]+)`/g, '<code class="forteai-inline-code">$1</code>')
+                // Bold
+                .replace(/\*\*(.+?)\*\*/g, "<strong>$1</strong>")
+                // Italic
+                .replace(/\*(.+?)\*/g, "<em>$1</em>")
+                // Numbered lists
+                .replace(/^\d+\.\s+(.+)$/gm, '<li class="forteai-ol-item">$1</li>')
+                // Bullet lists (- or *)
+                .replace(/^[\-\*]\s+(.+)$/gm, '<li class="forteai-ul-item">$1</li>')
+                // Wrap consecutive <li> items in <ul>
+                .replace(/((?:<li class="forteai-[uo]l-item">.*<\/li>\n?)+)/g, '<ul class="forteai-list">$1</ul>')
+                // Line breaks (double newline = paragraph, single = <br>)
+                .replace(/\n\n/g, "</p><p>")
+                .replace(/\n/g, "<br>");
+
+            return "<p>" + html + "</p>";
+        },
+
+        _addMessage: function (role, text, sources, images) {
+            var self = this;
             var messagesEl = document.getElementById("forteai-messages");
             var msgDiv = document.createElement("div");
             msgDiv.className = "forteai-msg forteai-msg-" + role;
 
             var textDiv = document.createElement("div");
             textDiv.className = "forteai-msg-text";
-            textDiv.textContent = text;
+
+            if (role === "assistant") {
+                textDiv.innerHTML = this._formatMarkdown(text);
+            } else {
+                textDiv.textContent = text;
+            }
+
             msgDiv.appendChild(textDiv);
+
+            // Render images if present
+            if (images && images.length > 0) {
+                var imagesDiv = document.createElement("div");
+                imagesDiv.className = "forteai-msg-images";
+                images.forEach(function (imgUrl) {
+                    var img = document.createElement("img");
+                    img.src = self.config.apiUrl + imgUrl;
+                    img.className = "forteai-msg-img";
+                    img.alt = "Screenshot from documentation";
+                    img.addEventListener("click", function () {
+                        self._showImageModal(img.src);
+                    });
+                    imagesDiv.appendChild(img);
+                });
+                msgDiv.appendChild(imagesDiv);
+            }
 
             if (sources && sources.length > 0) {
                 var srcDiv = document.createElement("div");
@@ -186,6 +268,16 @@
 
             messagesEl.appendChild(msgDiv);
             messagesEl.scrollTop = messagesEl.scrollHeight;
+        },
+
+        _showImageModal: function (src) {
+            var overlay = document.createElement("div");
+            overlay.className = "forteai-img-overlay";
+            overlay.innerHTML = '<img src="' + src + '" class="forteai-img-full" />';
+            overlay.addEventListener("click", function () {
+                overlay.remove();
+            });
+            document.body.appendChild(overlay);
         },
 
         _showTyping: function () {
@@ -232,7 +324,7 @@
             .then(function (data) {
                 self._hideTyping();
                 self.sessionId = data.session_id;
-                self._addMessage("assistant", data.reply, data.sources);
+                self._addMessage("assistant", data.reply, data.sources, data.images);
             })
             .catch(function () {
                 self._hideTyping();

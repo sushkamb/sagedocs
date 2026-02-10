@@ -4,150 +4,1035 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>ForteAI - Admin Dashboard</title>
+    <script>
+        // Apply saved theme immediately to prevent flash
+        (function(){var t=localStorage.getItem("forteai-theme");if(t==="dark")document.documentElement.setAttribute("data-theme","dark");})();
+    </script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;0,9..40,600;0,9..40,700;1,9..40,400&display=swap" rel="stylesheet">
     <style>
+        :root {
+            /* Sidebar — light: vibrant with colored brand */
+            --sidebar-bg: #f8f9fc;
+            --sidebar-border: #e2e6f0;
+            --sidebar-hover: #eef1f8;
+            --sidebar-active: #3b82f6;
+            --sidebar-text: #5c6a82;
+            --sidebar-text-active: #1e293b;
+            --sidebar-active-text: #ffffff;
+            --sidebar-brand-bg: linear-gradient(135deg, #1e3a5f, #2563eb);
+            --sidebar-brand-color: #ffffff;
+            --sidebar-select-bg: #ffffff;
+            --sidebar-select-border: #d8dde8;
+            --sidebar-select-text: #334155;
+            --sidebar-section-label: #9ca3b4;
+            --sidebar-footer-color: #b0b8c9;
+            /* Main content */
+            --accent: #3b82f6;
+            --accent-hover: #2563eb;
+            --content-bg: #f1f5f9;
+            --card-bg: #ffffff;
+            --card-border: #e2e8f0;
+            --text-primary: #0f172a;
+            --text-secondary: #475569;
+            --text-muted: #94a3b8;
+            --success: #10b981;
+            --success-bg: #ecfdf5;
+            --warning: #f59e0b;
+            --warning-bg: #fffbeb;
+            --danger: #ef4444;
+            --danger-bg: #fef2f2;
+            --info: #3b82f6;
+            --info-bg: #eff6ff;
+            --radius: 10px;
+            --shadow-sm: 0 1px 2px rgba(0,0,0,0.04), 0 1px 3px rgba(0,0,0,0.06);
+            --shadow-md: 0 4px 6px rgba(0,0,0,0.04), 0 2px 4px rgba(0,0,0,0.06);
+            --input-bg: #ffffff;
+        }
+
+        [data-theme="dark"] {
+            /* Sidebar — dark: deep navy */
+            --sidebar-bg: #0c1222;
+            --sidebar-border: #1a2332;
+            --sidebar-hover: #162032;
+            --sidebar-active: #3b82f6;
+            --sidebar-text: #5c6e8a;
+            --sidebar-text-active: #cbd5e1;
+            --sidebar-active-text: #ffffff;
+            --sidebar-brand-bg: linear-gradient(135deg, #0a1628, #111d33);
+            --sidebar-brand-color: #e2e8f0;
+            --sidebar-select-bg: #162032;
+            --sidebar-select-border: #1e2d42;
+            --sidebar-select-text: #94a3b8;
+            --sidebar-section-label: #445570;
+            --sidebar-footer-color: #334155;
+            /* Main content */
+            --content-bg: #0f172a;
+            --card-bg: #1e293b;
+            --card-border: #334155;
+            --text-primary: #f1f5f9;
+            --text-secondary: #94a3b8;
+            --text-muted: #64748b;
+            --success-bg: rgba(16,185,129,0.1);
+            --warning-bg: rgba(245,158,11,0.1);
+            --danger-bg: rgba(239,68,68,0.1);
+            --info-bg: rgba(59,130,246,0.1);
+            --shadow-sm: 0 1px 2px rgba(0,0,0,0.2), 0 1px 3px rgba(0,0,0,0.25);
+            --shadow-md: 0 4px 6px rgba(0,0,0,0.2), 0 2px 4px rgba(0,0,0,0.25);
+            --input-bg: #1e293b;
+        }
+
+        /* ═══ LIGHT MODE COLOR OVERRIDES ═══ */
+        :root .topbar {
+            background: linear-gradient(135deg, #eff6ff 0%, #f0fdf4 50%, #fffbeb 100%);
+            border-bottom: 1px solid #e2e8f0;
+        }
+
+        :root .stat-card.stat-total { background: linear-gradient(135deg, #eff6ff, #dbeafe); border-color: #bfdbfe; }
+        :root .stat-card.stat-answered { background: linear-gradient(135deg, #ecfdf5, #d1fae5); border-color: #a7f3d0; }
+        :root .stat-card.stat-unanswered { background: linear-gradient(135deg, #fffbeb, #fef3c7); border-color: #fde68a; }
+
+        :root .card-title svg { color: var(--accent); }
+
+        :root .dropzone {
+            background: linear-gradient(135deg, #f8fafc, #eff6ff);
+            border-color: #93c5fd;
+        }
+        :root .dropzone:hover { background: linear-gradient(135deg, #eff6ff, #dbeafe); border-color: var(--accent); }
+        :root .dropzone.has-file { background: linear-gradient(135deg, #eff6ff, #dbeafe); }
+
+        :root .btn-primary {
+            background: linear-gradient(135deg, #3b82f6, #2563eb);
+            box-shadow: 0 2px 8px rgba(37,99,235,0.3);
+        }
+        :root .btn-primary:hover { background: linear-gradient(135deg, #2563eb, #1d4ed8); box-shadow: 0 4px 12px rgba(37,99,235,0.4); }
+
+        :root .chat-msg-assistant { background: linear-gradient(135deg, #f8fafc, #eff6ff); border-color: #c7d8f0; }
+
+        :root .doc-icon.pdf { background: linear-gradient(135deg, #fef2f2, #fecaca); }
+        :root .doc-icon.md { background: linear-gradient(135deg, #f0fdf4, #bbf7d0); }
+        :root .doc-icon.html { background: linear-gradient(135deg, #fff7ed, #fed7aa); }
+        :root .doc-icon.txt { background: linear-gradient(135deg, #f1f5f9, #e2e8f0); }
+
+        :root .question-badge { width: 8px; height: 8px; background: linear-gradient(135deg, #f59e0b, #ef4444); }
+
+        /* ═══ DARK MODE OVERRIDES ═══ */
+        [data-theme="dark"] .topbar { background: none; border-bottom: none; margin: 0; padding: 20px 32px 0; }
+        [data-theme="dark"] .upload-status.processing { color: #fbbf24; }
+        [data-theme="dark"] .upload-status.success { color: #34d399; }
+        [data-theme="dark"] .upload-status.error { color: #f87171; }
+        [data-theme="dark"] .doc-icon.pdf { background: rgba(220,38,38,0.15); }
+        [data-theme="dark"] .doc-icon.md { background: rgba(22,163,106,0.15); }
+        [data-theme="dark"] .doc-icon.html { background: rgba(234,88,12,0.15); }
+        [data-theme="dark"] .doc-icon.txt { background: rgba(71,85,105,0.2); color: #94a3b8; }
+        [data-theme="dark"] .stat-card.stat-total { background: var(--card-bg); border-color: var(--card-border); }
+        [data-theme="dark"] .stat-card.stat-answered { background: var(--card-bg); border-color: var(--card-border); }
+        [data-theme="dark"] .stat-card.stat-unanswered { background: var(--card-bg); border-color: var(--card-border); }
+        [data-theme="dark"] .card-title svg { color: var(--text-muted); }
+        [data-theme="dark"] .dropzone { background: var(--content-bg); border-color: var(--card-border); }
+        [data-theme="dark"] .dropzone:hover { background: var(--info-bg); border-color: var(--accent); }
+        [data-theme="dark"] .dropzone.has-file { background: var(--info-bg); border-color: var(--accent); }
+        [data-theme="dark"] .btn-primary { background: var(--accent); box-shadow: 0 1px 2px rgba(59,130,246,0.3); }
+        [data-theme="dark"] .btn-primary:hover { background: var(--accent-hover); }
+        [data-theme="dark"] .chat-msg-assistant { background: var(--content-bg); border-color: var(--card-border); }
+        [data-theme="dark"] .question-badge { background: var(--warning); }
+
         * { box-sizing: border-box; margin: 0; padding: 0; }
-        body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; background: #f5f6fa; color: #333; }
-        .header { background: #0066cc; color: #fff; padding: 16px 24px; display: flex; align-items: center; gap: 12px; }
-        .header h1 { font-size: 20px; font-weight: 600; }
-        .container { max-width: 1000px; margin: 24px auto; padding: 0 24px; }
-        .card { background: #fff; border-radius: 8px; box-shadow: 0 1px 4px rgba(0,0,0,0.08); padding: 24px; margin-bottom: 20px; }
-        .card h2 { font-size: 16px; font-weight: 600; margin-bottom: 16px; color: #333; }
-        .form-group { margin-bottom: 16px; }
-        .form-group label { display: block; font-weight: 500; margin-bottom: 6px; font-size: 13px; color: #555; }
-        .form-group input, .form-group select { width: 100%; padding: 10px 12px; border: 1px solid #ddd; border-radius: 6px; font-size: 14px; }
-        .form-group input:focus, .form-group select:focus { border-color: #0066cc; outline: none; }
-        .btn { padding: 10px 20px; border: none; border-radius: 6px; font-size: 14px; cursor: pointer; font-weight: 500; }
-        .btn-primary { background: #0066cc; color: #fff; }
-        .btn-primary:hover { background: #0052a3; }
-        .btn-danger { background: #dc3545; color: #fff; }
-        .btn-danger:hover { background: #c82333; }
-        .doc-list { list-style: none; }
-        .doc-item { display: flex; justify-content: space-between; align-items: center; padding: 12px 0; border-bottom: 1px solid #eee; }
-        .doc-item:last-child { border-bottom: none; }
-        .doc-info { display: flex; flex-direction: column; gap: 2px; }
-        .doc-title { font-weight: 500; }
-        .doc-meta { font-size: 12px; color: #888; }
-        .upload-area { border: 2px dashed #ccc; border-radius: 8px; padding: 32px; text-align: center; color: #888; cursor: pointer; transition: border-color 0.2s; }
-        .upload-area:hover { border-color: #0066cc; }
-        .stats { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; }
-        .stat-box { text-align: center; padding: 16px; }
-        .stat-number { font-size: 32px; font-weight: 700; color: #0066cc; }
-        .stat-label { font-size: 13px; color: #888; margin-top: 4px; }
-        .empty-state { text-align: center; padding: 32px; color: #888; }
-        .tab-bar { display: flex; gap: 0; margin-bottom: 20px; border-bottom: 2px solid #eee; }
-        .tab-btn { padding: 10px 20px; background: none; border: none; cursor: pointer; font-size: 14px; font-weight: 500; color: #888; border-bottom: 2px solid transparent; margin-bottom: -2px; }
-        .tab-btn.active { color: #0066cc; border-bottom-color: #0066cc; }
+
+        body {
+            font-family: 'DM Sans', system-ui, sans-serif;
+            background: var(--content-bg);
+            color: var(--text-primary);
+            display: flex;
+            min-height: 100vh;
+            font-size: 14px;
+            -webkit-font-smoothing: antialiased;
+            transition: background 0.25s ease, color 0.25s ease;
+        }
+
+        .sidebar, .card, .stat-card, .form-input, .chat-input-row input, .chat-msg-assistant, .dropzone, .upload-status {
+            transition: background 0.25s ease, border-color 0.25s ease, color 0.25s ease;
+        }
+
+        /* ═══════ SIDEBAR ═══════ */
+        .sidebar {
+            width: 240px;
+            background: var(--sidebar-bg);
+            border-right: 1px solid var(--sidebar-border);
+            display: flex;
+            flex-direction: column;
+            flex-shrink: 0;
+            position: fixed;
+            top: 0;
+            left: 0;
+            bottom: 0;
+            z-index: 100;
+        }
+
+        .sidebar-brand {
+            padding: 20px 20px 18px;
+            background: var(--sidebar-brand-bg);
+        }
+
+        .sidebar-brand h1 {
+            font-size: 18px;
+            font-weight: 700;
+            color: #ffffff;
+            letter-spacing: -0.3px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .brand-icon {
+            width: 32px;
+            height: 32px;
+            background: rgba(255,255,255,0.18);
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 16px;
+            color: #fff;
+            flex-shrink: 0;
+            backdrop-filter: blur(4px);
+        }
+
+        .sidebar-tenant {
+            padding: 16px 16px 12px;
+        }
+
+        .sidebar-tenant label {
+            font-size: 11px;
+            text-transform: uppercase;
+            letter-spacing: 0.8px;
+            color: var(--sidebar-text);
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 500;
+        }
+
+        .sidebar-tenant select {
+            width: 100%;
+            padding: 8px 10px;
+            background: var(--sidebar-select-bg);
+            border: 1px solid var(--sidebar-select-border);
+            border-radius: 6px;
+            color: var(--sidebar-select-text);
+            font-size: 13px;
+            font-family: inherit;
+            outline: none;
+            cursor: pointer;
+            appearance: none;
+            background-image: url("data:image/svg+xml,%3Csvg width='10' height='6' viewBox='0 0 10 6' fill='none' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M1 1l4 4 4-4' stroke='%2394a3b8' stroke-width='1.5' stroke-linecap='round'/%3E%3C/svg%3E");
+            background-repeat: no-repeat;
+            background-position: right 10px center;
+        }
+
+        .sidebar-tenant select:focus { border-color: var(--accent); }
+
+        .sidebar-nav {
+            padding: 8px 12px;
+            flex: 1;
+        }
+
+        .nav-section-label {
+            font-size: 10px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            color: var(--sidebar-section-label);
+            padding: 16px 8px 8px;
+            font-weight: 600;
+        }
+
+        .nav-item {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 9px 12px;
+            border-radius: 7px;
+            color: var(--sidebar-text);
+            cursor: pointer;
+            font-size: 13px;
+            font-weight: 400;
+            transition: all 0.15s ease;
+            border: none;
+            background: none;
+            width: 100%;
+            text-align: left;
+            font-family: inherit;
+        }
+
+        .nav-item:hover {
+            background: var(--sidebar-hover);
+            color: var(--sidebar-text-active);
+        }
+
+        .nav-item.active {
+            background: var(--sidebar-active);
+            color: var(--sidebar-active-text);
+            font-weight: 600;
+            box-shadow: 0 1px 3px rgba(59,130,246,0.3);
+        }
+
+        .nav-item svg {
+            width: 18px;
+            height: 18px;
+            flex-shrink: 0;
+            opacity: 0.55;
+        }
+
+        .nav-item:hover svg { opacity: 0.85; }
+        .nav-item.active svg { opacity: 1; }
+
+        .sidebar-footer {
+            padding: 16px;
+            border-top: 1px solid var(--sidebar-border);
+            font-size: 11px;
+            color: var(--sidebar-footer-color);
+            text-align: center;
+        }
+
+        /* ═══════ MAIN CONTENT ═══════ */
+        .main {
+            margin-left: 240px;
+            flex: 1;
+            min-height: 100vh;
+        }
+
+        .topbar {
+            padding: 24px 32px 16px;
+        }
+
+        .page-title {
+            font-size: 22px;
+            font-weight: 700;
+            color: var(--text-primary);
+            letter-spacing: -0.4px;
+        }
+
+        .page-subtitle {
+            font-size: 13px;
+            color: var(--text-secondary);
+            margin-top: 2px;
+        }
+
+        .content {
+            padding: 24px 32px 40px;
+        }
+
         .tab-content { display: none; }
-        .tab-content.active { display: block; }
+        .tab-content.active {
+            display: block;
+            animation: fadeUp 0.3s ease;
+        }
+
+        @keyframes fadeUp {
+            from { opacity: 0; transform: translateY(8px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        /* ═══════ CARDS ═══════ */
+        .card {
+            background: var(--card-bg);
+            border-radius: var(--radius);
+            border: 1px solid var(--card-border);
+            padding: 24px;
+            margin-bottom: 20px;
+            box-shadow: var(--shadow-sm);
+        }
+
+        .card-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 20px;
+        }
+
+        .card-title {
+            font-size: 15px;
+            font-weight: 600;
+            color: var(--text-primary);
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .card-title svg {
+            width: 18px;
+            height: 18px;
+            color: var(--text-muted);
+        }
+
+        /* ═══════ STATS ═══════ */
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 16px;
+            margin-bottom: 20px;
+        }
+
+        .stat-card {
+            background: var(--card-bg);
+            border-radius: var(--radius);
+            border: 1px solid var(--card-border);
+            padding: 20px;
+            box-shadow: var(--shadow-sm);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .stat-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 3px;
+        }
+
+        .stat-card.stat-total::before { background: var(--info); }
+        .stat-card.stat-answered::before { background: var(--success); }
+        .stat-card.stat-unanswered::before { background: var(--warning); }
+
+        .stat-label {
+            font-size: 12px;
+            font-weight: 500;
+            color: var(--text-secondary);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            margin-bottom: 8px;
+        }
+
+        .stat-value {
+            font-size: 36px;
+            font-weight: 700;
+            letter-spacing: -1px;
+            line-height: 1;
+        }
+
+        .stat-total .stat-value { color: var(--info); }
+        .stat-answered .stat-value { color: var(--success); }
+        .stat-unanswered .stat-value { color: var(--warning); }
+
+        /* ═══════ UPLOAD ═══════ */
+        .upload-row {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+        }
+
+        .form-label {
+            font-size: 13px;
+            font-weight: 500;
+            color: var(--text-secondary);
+            margin-bottom: 6px;
+            display: block;
+        }
+
+        .form-input {
+            width: 100%;
+            padding: 10px 12px;
+            border: 1px solid var(--card-border);
+            border-radius: 8px;
+            font-size: 14px;
+            font-family: inherit;
+            color: var(--text-primary);
+            background: var(--input-bg);
+            outline: none;
+            transition: border-color 0.15s;
+        }
+
+        .form-input:focus { border-color: var(--accent); box-shadow: 0 0 0 3px rgba(59,130,246,0.1); }
+
+        .dropzone {
+            border: 2px dashed var(--card-border);
+            border-radius: var(--radius);
+            padding: 36px 24px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            background: var(--content-bg);
+        }
+
+        .dropzone:hover { border-color: var(--accent); background: var(--info-bg); }
+        .dropzone.has-file { border-color: var(--accent); border-style: solid; background: var(--info-bg); }
+        .dropzone.drag-over { border-color: var(--accent); background: var(--info-bg); transform: scale(1.01); }
+
+        .dropzone-icon {
+            width: 48px;
+            height: 48px;
+            margin: 0 auto 12px;
+            color: var(--text-muted);
+            transition: color 0.2s;
+        }
+
+        .dropzone:hover .dropzone-icon { color: var(--accent); }
+        .dropzone.has-file .dropzone-icon { color: var(--accent); }
+
+        .dropzone-text {
+            font-size: 14px;
+            color: var(--text-secondary);
+            font-weight: 500;
+        }
+
+        .dropzone-hint {
+            font-size: 12px;
+            color: var(--text-muted);
+            margin-top: 4px;
+        }
+
+        .dropzone-file-name {
+            font-size: 14px;
+            font-weight: 600;
+            color: var(--text-primary);
+            word-break: break-all;
+        }
+
+        .dropzone-file-size {
+            font-size: 12px;
+            color: var(--text-muted);
+            margin-top: 2px;
+        }
+
+        .dropzone-change {
+            font-size: 12px;
+            color: var(--accent);
+            margin-top: 6px;
+        }
+
+        .upload-actions {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            margin-top: 16px;
+        }
+
+        .upload-status {
+            font-size: 13px;
+            padding: 10px 14px;
+            border-radius: 8px;
+            display: none;
+            margin-top: 12px;
+            font-weight: 500;
+        }
+
+        .upload-status.processing { display: flex; align-items: center; gap: 8px; background: var(--warning-bg); color: #92400e; }
+        .upload-status.success { display: block; background: var(--success-bg); color: #065f46; }
+        .upload-status.error { display: block; background: var(--danger-bg); color: #991b1b; }
+
+        .upload-status .spinner-sm {
+            width: 14px;
+            height: 14px;
+            border: 2px solid rgba(146,64,14,0.2);
+            border-top-color: #92400e;
+            border-radius: 50%;
+            animation: spin 0.6s linear infinite;
+            flex-shrink: 0;
+        }
+
+        /* ═══════ BUTTONS ═══════ */
+        .btn {
+            padding: 9px 18px;
+            border: none;
+            border-radius: 8px;
+            font-size: 13px;
+            font-weight: 600;
+            cursor: pointer;
+            font-family: inherit;
+            transition: all 0.15s ease;
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .btn-primary {
+            background: var(--accent);
+            color: #fff;
+            box-shadow: 0 1px 2px rgba(59,130,246,0.3);
+        }
+        .btn-primary:hover { background: var(--accent-hover); box-shadow: 0 2px 4px rgba(59,130,246,0.4); }
+
+        .btn-ghost {
+            background: transparent;
+            color: var(--danger);
+            padding: 6px 10px;
+            font-size: 12px;
+        }
+        .btn-ghost:hover { background: var(--danger-bg); }
+
+        .btn:disabled { opacity: 0.6; cursor: not-allowed; pointer-events: none; }
+
+        .btn-loading {
+            position: relative;
+            color: transparent !important;
+        }
+        .btn-loading::after {
+            content: '';
+            position: absolute;
+            width: 16px;
+            height: 16px;
+            border: 2px solid rgba(255,255,255,0.3);
+            border-top-color: #fff;
+            border-radius: 50%;
+            animation: spin 0.6s linear infinite;
+        }
+
+        @keyframes spin { to { transform: rotate(360deg); } }
+
+        /* ═══════ DOCUMENT LIST ═══════ */
+        .doc-list {
+            list-style: none;
+        }
+
+        .doc-item {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 14px 0;
+            border-bottom: 1px solid var(--content-bg);
+        }
+
+        .doc-item:last-child { border-bottom: none; }
+
+        .doc-item-left {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .doc-icon {
+            width: 36px;
+            height: 36px;
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 11px;
+            font-weight: 700;
+            text-transform: uppercase;
+            flex-shrink: 0;
+        }
+
+        .doc-icon.pdf { background: #fef2f2; color: #dc2626; }
+        .doc-icon.md { background: #f0fdf4; color: #16a34a; }
+        .doc-icon.html { background: #fff7ed; color: #ea580c; }
+        .doc-icon.txt { background: #f1f5f9; color: #475569; }
+
+        .doc-title { font-weight: 500; font-size: 14px; color: var(--text-primary); }
+        .doc-meta { font-size: 12px; color: var(--text-muted); margin-top: 1px; }
+
+        .empty-state {
+            text-align: center;
+            padding: 40px 20px;
+            color: var(--text-muted);
+        }
+
+        .empty-state-icon {
+            width: 48px;
+            height: 48px;
+            margin: 0 auto 12px;
+            color: var(--card-border);
+        }
+
+        .empty-state-text {
+            font-size: 14px;
+            font-weight: 500;
+            color: var(--text-secondary);
+        }
+
+        .empty-state-hint {
+            font-size: 12px;
+            color: var(--text-muted);
+            margin-top: 4px;
+        }
+
+        /* ═══════ TEST CHAT ═══════ */
+        .chat-container {
+            height: 520px;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .chat-messages {
+            flex: 1;
+            overflow-y: auto;
+            padding: 16px 0;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+
+        .chat-msg {
+            max-width: 80%;
+            padding: 10px 14px;
+            border-radius: 12px;
+            font-size: 14px;
+            line-height: 1.55;
+            word-wrap: break-word;
+            animation: fadeUp 0.2s ease;
+        }
+
+        .chat-msg-user {
+            align-self: flex-end;
+            background: var(--accent);
+            color: #fff;
+            border-bottom-right-radius: 4px;
+        }
+
+        .chat-msg-assistant {
+            align-self: flex-start;
+            background: var(--content-bg);
+            color: var(--text-primary);
+            border: 1px solid var(--card-border);
+            border-bottom-left-radius: 4px;
+        }
+
+        .chat-msg-assistant img {
+            max-width: 100%;
+            max-height: 200px;
+            border-radius: 6px;
+            margin-top: 8px;
+            cursor: pointer;
+            border: 1px solid var(--card-border);
+        }
+
+        .chat-empty {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            color: var(--text-muted);
+            gap: 8px;
+        }
+
+        .chat-empty-icon {
+            width: 56px;
+            height: 56px;
+            color: var(--card-border);
+        }
+
+        .chat-input-row {
+            display: flex;
+            gap: 8px;
+            margin-top: 12px;
+            padding-top: 12px;
+            border-top: 1px solid var(--card-border);
+        }
+
+        .chat-input-row input {
+            flex: 1;
+            padding: 10px 14px;
+            border: 1px solid var(--card-border);
+            border-radius: 8px;
+            font-size: 14px;
+            font-family: inherit;
+            color: var(--text-primary);
+            background: var(--input-bg);
+            outline: none;
+            transition: border-color 0.15s;
+        }
+
+        .chat-input-row input:focus { border-color: var(--accent); box-shadow: 0 0 0 3px rgba(59,130,246,0.1); }
+
+        /* ═══════ QUESTIONS LIST ═══════ */
+        .question-item {
+            display: flex;
+            align-items: flex-start;
+            gap: 10px;
+            padding: 12px 0;
+            border-bottom: 1px solid var(--content-bg);
+        }
+
+        .question-item:last-child { border-bottom: none; }
+
+        .question-badge {
+            width: 6px;
+            height: 6px;
+            border-radius: 50%;
+            background: var(--warning);
+            margin-top: 7px;
+            flex-shrink: 0;
+        }
+
+        .question-text { font-size: 14px; color: var(--text-primary); }
+        .question-time { font-size: 11px; color: var(--text-muted); margin-top: 2px; }
+
+        /* ═══════ RESPONSIVE ═══════ */
+        @media (max-width: 768px) {
+            .sidebar { width: 0; overflow: hidden; }
+            .main { margin-left: 0; }
+            .stats-grid { grid-template-columns: 1fr; }
+            .upload-row { grid-template-columns: 1fr; }
+            .content { padding: 16px; }
+        }
     </style>
 </head>
 <body>
-    <div class="header">
-        <h1>ForteAI Admin</h1>
-    </div>
 
-    <div class="container">
-        <div class="card">
-            <div class="form-group">
-                <label>Tenant</label>
-                <select id="tenantSelect">
-                    <option value="">Select a tenant...</option>
-                </select>
-            </div>
+    <!-- SIDEBAR -->
+    <aside class="sidebar">
+        <div class="sidebar-brand">
+            <h1>
+                <span class="brand-icon">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><path d="M12 2L2 7l10 5 10-5-10-5z"/><path d="M2 17l10 5 10-5"/><path d="M2 12l10 5 10-5"/></svg>
+                </span>
+                ForteAI
+            </h1>
         </div>
 
-        <div class="tab-bar">
-            <button class="tab-btn active" data-tab="documents">Documents</button>
-            <button class="tab-btn" data-tab="test">Test Chat</button>
-            <button class="tab-btn" data-tab="analytics">Analytics</button>
+        <div class="sidebar-tenant">
+            <label>Tenant</label>
+            <select id="tenantSelect">
+                <option value="">Select tenant...</option>
+            </select>
         </div>
 
-        <!-- Documents Tab -->
-        <div class="tab-content active" id="tab-documents">
-            <div class="card">
-                <h2>Upload Document</h2>
-                <div class="form-group">
-                    <label>Document Title</label>
-                    <input type="text" id="docTitle" placeholder="e.g. Getting Started Guide" />
+        <nav class="sidebar-nav">
+            <div class="nav-section-label">Manage</div>
+            <button class="nav-item active" data-tab="documents">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+                Documents
+            </button>
+            <button class="nav-item" data-tab="test">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+                Test Chat
+            </button>
+            <button class="nav-item" data-tab="analytics">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg>
+                Analytics
+            </button>
+        </nav>
+
+        <div style="padding:8px 12px;">
+            <button class="nav-item" id="themeToggle" style="justify-content:center; gap:8px;">
+                <svg id="themeIconSun" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" style="display:none;"><circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/></svg>
+                <svg id="themeIconMoon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>
+                <span id="themeLabel">Dark Mode</span>
+            </button>
+        </div>
+        <div class="sidebar-footer">ForteAI v0.1.0</div>
+    </aside>
+
+    <!-- MAIN -->
+    <main class="main">
+        <div class="topbar">
+            <div class="page-title" id="pageTitle">Documents</div>
+            <div class="page-subtitle" id="pageSubtitle">Upload and manage help documentation</div>
+        </div>
+
+        <div class="content">
+
+            <!-- ═══ DOCUMENTS TAB ═══ -->
+            <div class="tab-content active" id="tab-documents">
+                <div class="card">
+                    <div class="card-header">
+                        <span class="card-title">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+                            Upload Document
+                        </span>
+                    </div>
+                    <div class="upload-row">
+                        <div>
+                            <label class="form-label">Document Title</label>
+                            <input type="text" id="docTitle" class="form-input" placeholder="e.g. Getting Started Guide" />
+                        </div>
+                        <div>
+                            <label class="form-label">File</label>
+                            <div class="dropzone" id="uploadArea">
+                                <div id="uploadPlaceholder">
+                                    <svg class="dropzone-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"><path d="M7 16a4 4 0 0 1-.88-7.903A5 5 0 1 1 15.9 6h.1a5 5 0 0 1 1 9.9M15 13l-3-3m0 0l-3 3m3-3v12"/></svg>
+                                    <div class="dropzone-text">Drop file or click to browse</div>
+                                    <div class="dropzone-hint">PDF, HTML, Markdown, TXT</div>
+                                </div>
+                                <div id="uploadFileInfo" style="display:none;">
+                                    <svg class="dropzone-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>
+                                    <div class="dropzone-file-name" id="uploadFileName"></div>
+                                    <div class="dropzone-file-size" id="uploadFileSize"></div>
+                                    <div class="dropzone-change">Click to change</div>
+                                </div>
+                                <input type="file" id="fileInput" style="display:none" accept=".pdf,.html,.htm,.md,.txt" />
+                            </div>
+                        </div>
+                    </div>
+                    <div id="uploadStatus" class="upload-status"></div>
+                    <div class="upload-actions">
+                        <button class="btn btn-primary" id="uploadBtn">
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+                            Upload &amp; Index
+                        </button>
+                    </div>
                 </div>
-                <div class="upload-area" id="uploadArea">
-                    <p>Drop a file here or click to browse</p>
-                    <p style="font-size: 12px; margin-top: 8px;">Supports PDF, HTML, Markdown, TXT</p>
-                    <input type="file" id="fileInput" style="display:none" accept=".pdf,.html,.htm,.md,.txt" />
-                </div>
-                <div style="margin-top: 12px;">
-                    <button class="btn btn-primary" id="uploadBtn">Upload & Index</button>
+
+                <div class="card">
+                    <div class="card-header">
+                        <span class="card-title">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"/></svg>
+                            Indexed Documents
+                        </span>
+                    </div>
+                    <ul class="doc-list" id="docList">
+                        <li class="empty-state">
+                            <svg class="empty-state-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+                            <div class="empty-state-text">No documents indexed yet</div>
+                            <div class="empty-state-hint">Upload a document above to get started</div>
+                        </li>
+                    </ul>
                 </div>
             </div>
 
-            <div class="card">
-                <h2>Indexed Documents</h2>
-                <ul class="doc-list" id="docList">
-                    <li class="empty-state">No documents indexed yet</li>
-                </ul>
-            </div>
-        </div>
-
-        <!-- Test Chat Tab -->
-        <div class="tab-content" id="tab-test">
-            <div class="card" style="height: 500px; display: flex; flex-direction: column;">
-                <h2>Test Chat</h2>
-                <div id="testMessages" style="flex:1; overflow-y:auto; padding: 12px 0; display: flex; flex-direction: column; gap: 8px;"></div>
-                <div style="display:flex; gap:8px; margin-top: 12px;">
-                    <input type="text" id="testInput" placeholder="Ask a test question..." style="flex:1; padding:10px 12px; border:1px solid #ddd; border-radius:6px;" />
-                    <button class="btn btn-primary" id="testSend">Send</button>
+            <!-- ═══ TEST CHAT TAB ═══ -->
+            <div class="tab-content" id="tab-test">
+                <div class="card chat-container">
+                    <div class="chat-messages" id="testMessages">
+                        <div class="chat-empty">
+                            <svg class="chat-empty-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+                            <span style="font-weight:500; color:var(--text-secondary);">Test your knowledge base</span>
+                            <span style="font-size:12px;">Ask a question to see how the AI responds</span>
+                        </div>
+                    </div>
+                    <div class="chat-input-row">
+                        <input type="text" id="testInput" placeholder="Ask a test question..." />
+                        <button class="btn btn-primary" id="testSend">
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>
+                        </button>
+                    </div>
                 </div>
             </div>
-        </div>
 
-        <!-- Analytics Tab -->
-        <div class="tab-content" id="tab-analytics">
-            <div class="card">
-                <h2>Overview</h2>
-                <div class="stats">
-                    <div class="stat-box">
-                        <div class="stat-number" id="statTotal">0</div>
+            <!-- ═══ ANALYTICS TAB ═══ -->
+            <div class="tab-content" id="tab-analytics">
+                <div class="stats-grid">
+                    <div class="stat-card stat-total">
                         <div class="stat-label">Total Questions</div>
+                        <div class="stat-value" id="statTotal">0</div>
                     </div>
-                    <div class="stat-box">
-                        <div class="stat-number" id="statAnswered">0</div>
+                    <div class="stat-card stat-answered">
                         <div class="stat-label">Answered</div>
+                        <div class="stat-value" id="statAnswered">0</div>
                     </div>
-                    <div class="stat-box">
-                        <div class="stat-number" id="statUnanswered">0</div>
-                        <div class="stat-label">Unanswered (Content Gaps)</div>
+                    <div class="stat-card stat-unanswered">
+                        <div class="stat-label">Unanswered</div>
+                        <div class="stat-value" id="statUnanswered">0</div>
                     </div>
                 </div>
+
+                <div class="card">
+                    <div class="card-header">
+                        <span class="card-title">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+                            Unanswered Questions
+                        </span>
+                        <span style="font-size:12px; color:var(--text-muted);">Content gaps to address</span>
+                    </div>
+                    <ul class="doc-list" id="unansweredList">
+                        <li class="empty-state">
+                            <svg class="empty-state-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
+                            <div class="empty-state-text">All questions answered</div>
+                            <div class="empty-state-hint">No content gaps detected</div>
+                        </li>
+                    </ul>
+                </div>
             </div>
-            <div class="card">
-                <h2>Unanswered Questions (Documentation Roadmap)</h2>
-                <ul class="doc-list" id="unansweredList">
-                    <li class="empty-state">No unanswered questions yet</li>
-                </ul>
-            </div>
+
         </div>
-    </div>
+    </main>
 
     <script>
-        var API_BASE = window.location.origin;
-        var currentTenant = "";
+        // ═══ THEME TOGGLE ═══
+        function updateThemeUI(theme) {
+            var isDark = theme === "dark";
+            document.getElementById("themeIconSun").style.display = isDark ? "block" : "none";
+            document.getElementById("themeIconMoon").style.display = isDark ? "none" : "block";
+            document.getElementById("themeLabel").textContent = isDark ? "Light Mode" : "Dark Mode";
+        }
 
-        // Tab switching
-        document.querySelectorAll(".tab-btn").forEach(function (btn) {
-            btn.addEventListener("click", function () {
-                document.querySelectorAll(".tab-btn").forEach(function (b) { b.classList.remove("active"); });
-                document.querySelectorAll(".tab-content").forEach(function (c) { c.classList.remove("active"); });
-                btn.classList.add("active");
-                document.getElementById("tab-" + btn.dataset.tab).classList.add("active");
+        document.addEventListener("DOMContentLoaded", function () {
+            var current = document.documentElement.getAttribute("data-theme") || "light";
+            updateThemeUI(current);
+
+            document.getElementById("themeToggle").addEventListener("click", function () {
+                var isDark = document.documentElement.getAttribute("data-theme") === "dark";
+                var next = isDark ? "light" : "dark";
+                if (next === "dark") {
+                    document.documentElement.setAttribute("data-theme", "dark");
+                } else {
+                    document.documentElement.removeAttribute("data-theme");
+                }
+                localStorage.setItem("forteai-theme", next);
+                updateThemeUI(next);
             });
         });
 
-        // Upload area click
-        document.getElementById("uploadArea").addEventListener("click", function () {
+        var API_BASE = window.location.origin;
+        var currentTenant = "";
+
+        var pageTitles = {
+            documents: { title: "Documents", subtitle: "Upload and manage help documentation" },
+            test: { title: "Test Chat", subtitle: "Test your AI assistant responses" },
+            analytics: { title: "Analytics", subtitle: "Track question coverage and content gaps" }
+        };
+
+        // ═══ NAV SWITCHING ═══
+        document.querySelectorAll(".nav-item[data-tab]").forEach(function (btn) {
+            btn.addEventListener("click", function () {
+                document.querySelectorAll(".nav-item[data-tab]").forEach(function (b) { b.classList.remove("active"); });
+                document.querySelectorAll(".tab-content").forEach(function (c) { c.classList.remove("active"); });
+                btn.classList.add("active");
+                var tab = btn.dataset.tab;
+                document.getElementById("tab-" + tab).classList.add("active");
+                document.getElementById("pageTitle").textContent = pageTitles[tab].title;
+                document.getElementById("pageSubtitle").textContent = pageTitles[tab].subtitle;
+            });
+        });
+
+        // ═══ UPLOAD AREA ═══
+        var uploadArea = document.getElementById("uploadArea");
+
+        uploadArea.addEventListener("click", function () {
             document.getElementById("fileInput").click();
         });
 
-        // Load tenants
+        uploadArea.addEventListener("dragover", function (e) {
+            e.preventDefault();
+            this.classList.add("drag-over");
+        });
+
+        uploadArea.addEventListener("dragleave", function () {
+            this.classList.remove("drag-over");
+        });
+
+        uploadArea.addEventListener("drop", function (e) {
+            e.preventDefault();
+            this.classList.remove("drag-over");
+            if (e.dataTransfer.files.length > 0) {
+                document.getElementById("fileInput").files = e.dataTransfer.files;
+                document.getElementById("fileInput").dispatchEvent(new Event("change"));
+            }
+        });
+
+        document.getElementById("fileInput").addEventListener("change", function () {
+            var file = this.files[0];
+            var placeholder = document.getElementById("uploadPlaceholder");
+            var fileInfo = document.getElementById("uploadFileInfo");
+
+            if (file) {
+                var sizeStr = file.size > 1048576 ? (file.size / 1048576).toFixed(1) + " MB" : (file.size / 1024).toFixed(1) + " KB";
+                document.getElementById("uploadFileName").textContent = file.name;
+                document.getElementById("uploadFileSize").textContent = sizeStr;
+                placeholder.style.display = "none";
+                fileInfo.style.display = "block";
+                uploadArea.classList.add("has-file");
+            } else {
+                placeholder.style.display = "block";
+                fileInfo.style.display = "none";
+                uploadArea.classList.remove("has-file");
+            }
+            setUploadStatus("", "");
+        });
+
+        // ═══ TENANTS ═══
         fetch(API_BASE + "/api/tenants/")
             .then(function (r) { return r.json(); })
             .then(function (data) {
@@ -168,6 +1053,13 @@
             }
         });
 
+        // ═══ DOCUMENTS ═══
+        function getFileExt(filename) {
+            var ext = filename.split(".").pop().toLowerCase();
+            if (ext === "htm") ext = "html";
+            return ext;
+        }
+
         function loadDocuments() {
             fetch(API_BASE + "/api/documents/list?tenant=" + currentTenant)
                 .then(function (r) { return r.json(); })
@@ -175,19 +1067,21 @@
                     var list = document.getElementById("docList");
                     var docs = data.documents || [];
                     if (docs.length === 0) {
-                        list.innerHTML = '<li class="empty-state">No documents indexed yet</li>';
+                        list.innerHTML = '<li class="empty-state"><svg class="empty-state-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg><div class="empty-state-text">No documents indexed yet</div><div class="empty-state-hint">Upload a document above to get started</div></li>';
                         return;
                     }
                     list.innerHTML = "";
                     docs.forEach(function (doc) {
+                        var ext = getFileExt(doc.filename);
                         var li = document.createElement("li");
                         li.className = "doc-item";
                         li.innerHTML =
-                            '<div class="doc-info">' +
-                                '<span class="doc-title">' + doc.title + '</span>' +
-                                '<span class="doc-meta">' + doc.filename + ' | ' + doc.chunk_count + ' chunks</span>' +
+                            '<div class="doc-item-left">' +
+                                '<div class="doc-icon ' + ext + '">' + ext + '</div>' +
+                                '<div><div class="doc-title">' + doc.title + '</div>' +
+                                '<div class="doc-meta">' + doc.filename + ' &middot; ' + doc.chunk_count + ' chunks</div></div>' +
                             '</div>' +
-                            '<button class="btn btn-danger" onclick="deleteDoc(\'' + doc.filename + '\')">Delete</button>';
+                            '<button class="btn btn-ghost" onclick="deleteDoc(\'' + doc.filename + '\')">Delete</button>';
                         list.appendChild(li);
                     });
                 });
@@ -199,12 +1093,29 @@
                 .then(function () { loadDocuments(); });
         }
 
-        // Upload
+        // ═══ UPLOAD ═══
+        function setUploadStatus(message, type) {
+            var el = document.getElementById("uploadStatus");
+            if (!type) { el.className = "upload-status"; el.innerHTML = ""; return; }
+            var spinner = type === "processing" ? '<span class="spinner-sm"></span>' : '';
+            el.innerHTML = spinner + message;
+            el.className = "upload-status " + type;
+        }
+
+        function resetUploadForm() {
+            document.getElementById("docTitle").value = "";
+            document.getElementById("fileInput").value = "";
+            document.getElementById("uploadPlaceholder").style.display = "block";
+            document.getElementById("uploadFileInfo").style.display = "none";
+            uploadArea.classList.remove("has-file");
+        }
+
         document.getElementById("uploadBtn").addEventListener("click", function () {
+            var btn = this;
             var file = document.getElementById("fileInput").files[0];
             var title = document.getElementById("docTitle").value.trim();
             if (!file || !title || !currentTenant) {
-                alert("Please select a tenant, enter a title, and choose a file.");
+                setUploadStatus("Please select a tenant, enter a title, and choose a file.", "error");
                 return;
             }
             var fd = new FormData();
@@ -212,21 +1123,50 @@
             fd.append("tenant", currentTenant);
             fd.append("title", title);
 
+            btn.disabled = true;
+            btn.classList.add("btn-loading");
+            setUploadStatus("Uploading and indexing document. This may take a minute if it contains images...", "processing");
+
             fetch(API_BASE + "/api/documents/upload", { method: "POST", body: fd })
-                .then(function (r) { return r.json(); })
+                .then(function (r) {
+                    if (!r.ok) throw new Error("Upload failed (HTTP " + r.status + ")");
+                    return r.json();
+                })
                 .then(function (data) {
-                    alert(data.message);
-                    document.getElementById("docTitle").value = "";
-                    document.getElementById("fileInput").value = "";
+                    setUploadStatus(data.message || "Document uploaded and indexed successfully.", "success");
+                    resetUploadForm();
                     loadDocuments();
+                })
+                .catch(function (err) {
+                    setUploadStatus("Error: " + err.message, "error");
+                })
+                .finally(function () {
+                    btn.disabled = false;
+                    btn.classList.remove("btn-loading");
                 });
         });
 
-        // Test chat
+        // ═══ TEST CHAT ═══
         document.getElementById("testSend").addEventListener("click", sendTestMessage);
         document.getElementById("testInput").addEventListener("keydown", function (e) {
             if (e.key === "Enter") sendTestMessage();
         });
+
+        function formatMarkdown(text) {
+            return text
+                .replace(/&/g, "&amp;")
+                .replace(/</g, "&lt;")
+                .replace(/>/g, "&gt;")
+                .replace(/```([\s\S]*?)```/g, '<pre style="background:rgba(0,0,0,0.04);border-radius:6px;padding:8px 10px;font-family:monospace;font-size:12px;white-space:pre-wrap;margin:6px 0;">$1</pre>')
+                .replace(/`([^`]+)`/g, '<code style="background:rgba(0,0,0,0.04);border-radius:3px;padding:1px 5px;font-family:monospace;font-size:12px;">$1</code>')
+                .replace(/\*\*(.+?)\*\*/g, "<strong>$1</strong>")
+                .replace(/\*(.+?)\*/g, "<em>$1</em>")
+                .replace(/^\d+\.\s+(.+)$/gm, '<li style="margin-bottom:4px;">$1</li>')
+                .replace(/^[\-\*]\s+(.+)$/gm, '<li style="margin-bottom:4px;">$1</li>')
+                .replace(/((?:<li[^>]*>.*<\/li>\n?)+)/g, '<ul style="list-style:disc;padding-left:20px;margin:6px 0;">$1</ul>')
+                .replace(/\n\n/g, "<br><br>")
+                .replace(/\n/g, "<br>");
+        }
 
         function sendTestMessage() {
             var input = document.getElementById("testInput");
@@ -235,7 +1175,15 @@
             input.value = "";
 
             var messagesEl = document.getElementById("testMessages");
-            messagesEl.innerHTML += '<div style="align-self:flex-end; background:#0066cc; color:#fff; padding:8px 12px; border-radius:8px; max-width:80%;">' + msg + '</div>';
+            // Remove empty state
+            var empty = messagesEl.querySelector(".chat-empty");
+            if (empty) empty.remove();
+
+            var userDiv = document.createElement("div");
+            userDiv.className = "chat-msg chat-msg-user";
+            userDiv.textContent = msg;
+            messagesEl.appendChild(userDiv);
+            messagesEl.scrollTop = messagesEl.scrollHeight;
 
             fetch(API_BASE + "/api/chat/help", {
                 method: "POST",
@@ -245,13 +1193,25 @@
             .then(function (r) { return r.json(); })
             .then(function (data) {
                 var sources = data.sources && data.sources.length > 0
-                    ? '<div style="font-size:11px; color:#888; margin-top:4px;">Sources: ' + data.sources.map(function(s) { return s.title; }).join(", ") + '</div>'
+                    ? '<div style="font-size:11px; color:var(--text-muted); margin-top:8px; padding-top:6px; border-top:1px solid var(--card-border);">Sources: ' + data.sources.map(function(s) { return s.title; }).join(", ") + '</div>'
                     : "";
-                messagesEl.innerHTML += '<div style="align-self:flex-start; background:#f0f0f0; padding:8px 12px; border-radius:8px; max-width:80%;">' + data.reply + sources + '</div>';
+                var imagesHtml = "";
+                if (data.images && data.images.length > 0) {
+                    imagesHtml = '<div style="margin-top:8px; display:flex; flex-wrap:wrap; gap:6px;">';
+                    data.images.forEach(function (imgUrl) {
+                        imagesHtml += '<img src="' + API_BASE + imgUrl + '" onclick="window.open(this.src)" />';
+                    });
+                    imagesHtml += '</div>';
+                }
+                var replyDiv = document.createElement("div");
+                replyDiv.className = "chat-msg chat-msg-assistant";
+                replyDiv.innerHTML = formatMarkdown(data.reply) + imagesHtml + sources;
+                messagesEl.appendChild(replyDiv);
                 messagesEl.scrollTop = messagesEl.scrollHeight;
             });
         }
 
+        // ═══ ANALYTICS ═══
         function loadAnalytics() {
             fetch(API_BASE + "/api/analytics/summary?tenant=" + currentTenant)
                 .then(function (r) { return r.json(); })
@@ -267,18 +1227,17 @@
                     var list = document.getElementById("unansweredList");
                     var questions = data.questions || [];
                     if (questions.length === 0) {
-                        list.innerHTML = '<li class="empty-state">No unanswered questions yet</li>';
+                        list.innerHTML = '<li class="empty-state"><svg class="empty-state-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg><div class="empty-state-text">All questions answered</div><div class="empty-state-hint">No content gaps detected</div></li>';
                         return;
                     }
                     list.innerHTML = "";
                     questions.slice(0, 50).forEach(function (q) {
                         var li = document.createElement("li");
-                        li.className = "doc-item";
+                        li.className = "question-item";
                         li.innerHTML =
-                            '<div class="doc-info">' +
-                                '<span class="doc-title">' + q.question + '</span>' +
-                                '<span class="doc-meta">' + q.timestamp + '</span>' +
-                            '</div>';
+                            '<span class="question-badge"></span>' +
+                            '<div><div class="question-text">' + q.question + '</div>' +
+                            '<div class="question-time">' + q.timestamp + '</div></div>';
                         list.appendChild(li);
                     });
                 });

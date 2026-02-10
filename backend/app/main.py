@@ -28,6 +28,11 @@ app.include_router(documents.router)
 app.include_router(tenants.router)
 app.include_router(analytics.router)
 
+# Serve extracted document images
+images_dir = os.path.join(os.path.dirname(__file__), "..", "data", "images")
+os.makedirs(images_dir, exist_ok=True)
+app.mount("/data/images", StaticFiles(directory=images_dir), name="images")
+
 # Serve the widget static files
 widget_dir = os.path.join(os.path.dirname(__file__), "..", "..", "widget")
 if os.path.exists(widget_dir):
