@@ -8,7 +8,7 @@ class Settings(BaseSettings):
     openai_api_key: Optional[str] = None
     anthropic_api_key: Optional[str] = None
     llm_model: str = "gpt-5.2"
-    llm_model_fast: str = "gpt-5.2-instant"  # Cost-effective model for high-volume help queries
+    llm_model_fast: str = "gpt-5-mini"  # Cost-effective model for high-volume help queries
     embedding_model: str = "text-embedding-3-small"
 
     # ChromaDB
