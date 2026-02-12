@@ -78,21 +78,21 @@ cp ../.env.example .env
 # Edit .env and add your API key(s)
 
 # Run the server
-uvicorn app.main:app --reload --port 8100
+uvicorn app.main:app --reload --port 8500
 ```
 
 ### Verify It's Running
 
-- API: http://localhost:8100
-- Swagger docs: http://localhost:8100/docs
-- Admin dashboard: http://localhost:8100/admin
+- API: http://localhost:8500
+- Swagger docs: http://localhost:8500/docs
+- Admin dashboard: http://localhost:8500/admin
 
 ### Embed the Widget
 
 Add two lines to any web page:
 
 ```html
-<script src="http://localhost:8100/widget/forteai-widget.js"></script>
+<script src="http://localhost:8500/widget/forteai-widget.js"></script>
 <script>
   ForteAI.init({
     tenant: 'chirocloud',
@@ -188,7 +188,7 @@ All settings are controlled via environment variables (`.env` file). See `.env.e
 | `ANTHROPIC_API_KEY` | — | Anthropic API key (if using Claude) |
 | `EMBEDDING_MODEL` | `text-embedding-3-small` | Model for document embeddings |
 | `CHROMA_PERSIST_DIR` | `./data/chroma` | ChromaDB storage location |
-| `PORT` | `8100` | Server port |
+| `PORT` | `8500` | Server port |
 | `CORS_ORIGINS` | `http://localhost` | Allowed CORS origins (comma-separated) |
 
 ## Docker
@@ -196,7 +196,7 @@ All settings are controlled via environment variables (`.env` file). See `.env.e
 ```bash
 cd backend
 docker build -t forteai .
-docker run -p 8100:8100 --env-file ../.env forteai
+docker run -p 8500:8500 --env-file ../.env forteai
 ```
 
 ## Documentation

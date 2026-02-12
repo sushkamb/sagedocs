@@ -34,3 +34,10 @@ uploads/
 
 # Logs
 *.log
+
+# Test screenshots (Playwright)
+tests/screenshots/*.png
+tests/screenshots/*.jpeg
+
+# Claude Code
+.claude/

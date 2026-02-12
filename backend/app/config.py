@@ -16,7 +16,7 @@ class Settings(BaseSettings):
 
     # Server
     host: str = "0.0.0.0"
-    port: int = 8100
+    port: int = 8500
 
     # CORS
     cors_origins: str = "http://localhost,http://localhost:8080"

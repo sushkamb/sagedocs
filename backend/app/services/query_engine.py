@@ -152,7 +152,7 @@ class QueryEngine:
             "X-Account-Number": account_number,
         }
 
-        async with httpx.AsyncClient(timeout=30.0) as client:
+        async with httpx.AsyncClient(timeout=120.0, verify=False) as client:
             if method.upper() == "GET":
                 response = await client.get(url, params=params, headers=headers)
             elif method.upper() == "POST":

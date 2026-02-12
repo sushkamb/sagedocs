@@ -4,13 +4,35 @@
 <body>
   <h1>ForteAI Widget Test Page</h1>
   <p>The chat widget should appear in the bottom-right corner.</p>
-  <p>Try asking: "How do I add a new patient?" or "How do I submit a claim?"</p>
+  <p><strong>Help mode:</strong> "How do I add a new patient?" or "How do I submit a claim?"</p>
+  <p><strong>Data mode:</strong> "How many new patients this month?" or "What claims are past 90 days?"</p>
+  <p id="status">Authenticating...</p>
 
   <script src="http://localhost:8100/widget/forteai-widget.js"></script>
   <script>
-    ForteAI.init({
-      tenant: 'chirocloud',
-      apiUrl: 'http://localhost:8100'
+    // Authenticate to ChiroCloud to get a JWT for data mode
+    fetch('https://localhost:44322/api/Users/authenticate', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ username: 'a', password: '@Bcd1234', account: '33850' })
+    })
+    .then(function(r) { return r.json(); })
+    .then(function(data) {
+      var token = data.data.token;
+      document.getElementById('status').textContent = 'Authenticated as ' + data.data.firstName + ' ' + data.data.lastName + ' — both help and data mode active.';
+      ForteAI.init({
+        tenant: 'chirocloud',
+        accountNumber: '33850',
+        token: token,
+        apiUrl: 'http://localhost:8100'
+      });
+    })
+    .catch(function() {
+      document.getElementById('status').textContent = 'Auth failed — running in help-only mode.';
+      ForteAI.init({
+        tenant: 'chirocloud',
+        apiUrl: 'http://localhost:8100'
+      });
     });
   </script>
 </body>

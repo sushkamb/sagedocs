@@ -54,11 +54,11 @@ pip install -r requirements.txt
 cp ../.env.example .env   # Edit with your API keys
 
 # Run locally
-uvicorn app.main:app --reload --port 8100
+uvicorn app.main:app --reload --port 8500
 
 # Run with Docker
 docker build -t forteai .
-docker run -p 8100:8100 forteai
+docker run -p 8500:8500 forteai
 ```
 
 ## Key Patterns

@@ -59,21 +59,21 @@ All other settings have sensible defaults for local development.
 
 ```bash
 # From the backend/ directory, with venv activated
-uvicorn app.main:app --reload --port 8100
+uvicorn app.main:app --reload --port 8500
 ```
 
 You should see:
 
 ```
-INFO:     Uvicorn running on http://0.0.0.0:8100 (Press CTRL+C to quit)
+INFO:     Uvicorn running on http://0.0.0.0:8500 (Press CTRL+C to quit)
 INFO:     Started reloader process
 ```
 
 ### 2.4 Verify
 
-- Open http://localhost:8100 — Should return `{"name":"ForteAI Bot","version":"0.1.0","status":"running","docs":"/docs"}`
-- Open http://localhost:8100/docs — Swagger UI with all API endpoints
-- Open http://localhost:8100/admin — Admin dashboard
+- Open http://localhost:8500 — Should return `{"name":"ForteAI Bot","version":"0.1.0","status":"running","docs":"/docs"}`
+- Open http://localhost:8500/docs — Swagger UI with all API endpoints
+- Open http://localhost:8500/admin — Admin dashboard
 
 ---
 
@@ -82,7 +82,7 @@ INFO:     Started reloader process
 ### 3.1 Create a Tenant
 
 ```bash
-curl -X POST http://localhost:8100/api/tenants/create \
+curl -X POST http://localhost:8500/api/tenants/create \
   -H "Content-Type: application/json" \
   -d '{
     "tenant_id": "chirocloud",
@@ -133,7 +133,7 @@ EOF
 Upload it:
 
 ```bash
-curl -X POST http://localhost:8100/api/documents/upload \
+curl -X POST http://localhost:8500/api/documents/upload \
   -F "file=@/tmp/test-help.md" \
   -F "tenant=chirocloud" \
   -F "title=Getting Started Guide"
@@ -152,7 +152,7 @@ Expected response:
 ### 3.3 Test a Chat Query
 
 ```bash
-curl -X POST http://localhost:8100/api/chat/help \
+curl -X POST http://localhost:8500/api/chat/help \
   -H "Content-Type: application/json" \
   -d '{
     "tenant": "chirocloud",
@@ -164,7 +164,7 @@ Expected: A response with the answer pulled from the uploaded document, with sou
 
 ### 3.4 Verify via Admin Dashboard
 
-1. Open http://localhost:8100/admin
+1. Open http://localhost:8500/admin
 2. Select "chirocloud" from the tenant dropdown
 3. You should see the uploaded document listed under "Indexed Documents"
 4. Switch to the "Test Chat" tab and ask a question interactively
@@ -185,11 +185,11 @@ Create a file anywhere on your machine:
   <h1>ForteAI Widget Test Page</h1>
   <p>The chat widget should appear in the bottom-right corner.</p>
 
-  <script src="http://localhost:8100/widget/forteai-widget.js"></script>
+  <script src="http://localhost:8500/widget/forteai-widget.js"></script>
   <script>
     ForteAI.init({
       tenant: 'chirocloud',
-      apiUrl: 'http://localhost:8100'
+      apiUrl: 'http://localhost:8500'
     });
   </script>
 </body>
@@ -207,7 +207,7 @@ Data mode requires a running host application with API endpoints. For local test
 ### 5.1 Verify Tool Registry
 
 ```bash
-curl http://localhost:8100/docs
+curl http://localhost:8500/docs
 ```
 
 Navigate to the `POST /api/chat/data` endpoint in Swagger. The tool registry is loaded from `backend/tools/chirocloud.yaml`.
@@ -242,7 +242,7 @@ base_url: http://localhost:9999
 Then test:
 
 ```bash
-curl -X POST http://localhost:8100/api/chat/data \
+curl -X POST http://localhost:8500/api/chat/data \
   -H "Content-Type: application/json" \
   -d '{
     "tenant": "chirocloud",
@@ -258,8 +258,8 @@ curl -X POST http://localhost:8100/api/chat/data \
 
 FastAPI auto-generates interactive API documentation:
 
-- **Swagger UI:** http://localhost:8100/docs
-- **ReDoc:** http://localhost:8100/redoc
+- **Swagger UI:** http://localhost:8500/docs
+- **ReDoc:** http://localhost:8500/redoc
 
 You can test all endpoints directly from the Swagger UI without needing curl.
 
@@ -279,7 +279,7 @@ docker build -t forteai .
 ```bash
 docker run -d \
   --name forteai \
-  -p 8100:8100 \
+  -p 8500:8500 \
   --env-file ../.env \
   -v forteai-data:/app/data \
   forteai
@@ -290,7 +290,7 @@ The `-v forteai-data:/app/data` flag persists ChromaDB data and tenant configs a
 ### 7.3 Verify
 
 ```bash
-curl http://localhost:8100/health
+curl http://localhost:8500/health
 # {"status":"healthy"}
 ```
 
@@ -330,7 +330,7 @@ cd backend
 docker build -t forteai .
 docker run -d \
   --name forteai \
-  -p 8100:8100 \
+  -p 8500:8500 \
   --restart unless-stopped \
   --env-file ../.env \
   -v forteai-data:/app/data \
@@ -343,7 +343,7 @@ docker run -d \
 - [ ] Set a strong `ADMIN_SECRET_KEY`
 - [ ] Use HTTPS (put behind an ALB or nginx with SSL)
 - [ ] Keep API keys in `.env` only (never commit to git)
-- [ ] Restrict EC2 security group: port 8100 accessible only from your app servers or load balancer
+- [ ] Restrict EC2 security group: port 8500 accessible only from your app servers or load balancer
 - [ ] Set up CloudWatch or similar for monitoring
 
 ---
@@ -378,7 +378,7 @@ chmod 755 data/chroma
 
 ### Chat returns "I don't have any documentation"
 
-- Verify documents are uploaded: `curl http://localhost:8100/api/documents/list?tenant=chirocloud`
+- Verify documents are uploaded: `curl http://localhost:8500/api/documents/list?tenant=chirocloud`
 - Re-upload documents if the list is empty
 - Check that the tenant name in the widget matches the tenant used during upload
 

@@ -81,14 +81,35 @@ async def chat_data(request: ChatRequest):
     )
 
 
+_NON_ANSWER_PHRASES = [
+    "not in the documentation",
+    "not in the provided documentation",
+    "can't find",
+    "cannot find",
+    "don't have",
+    "do not have",
+    "no information",
+    "no instructions",
+    "not covered",
+    "contact support",
+    "contact chirocloud support",
+]
+
+
+def _is_non_answer(reply: str) -> bool:
+    """Check if a RAG reply is essentially saying 'I don't know'."""
+    lower = reply.lower()
+    return any(phrase in lower for phrase in _NON_ANSWER_PHRASES)
+
+
 async def _unified_chat(request: ChatRequest) -> dict:
     """Unified chat — tries help mode first, falls back to data mode if needed."""
 
     # Try help mode first
     help_result = rag_engine.query(request.tenant, request.message)
 
-    # If help mode found relevant docs, return that answer
-    if help_result["sources"]:
+    # If help mode found relevant docs AND actually answered, return that
+    if help_result["sources"] and not _is_non_answer(help_result["reply"]):
         return help_result
 
     # Otherwise try data mode

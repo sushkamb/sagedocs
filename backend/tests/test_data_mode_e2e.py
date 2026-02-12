@@ -2,7 +2,7 @@
 
 Requires:
   1. Mock ChiroCloud running on port 8200:  python tests/mock_chirocloud.py
-  2. ForteAI backend running on port 8100:  uvicorn app.main:app --port 8100
+  2. ForteAI backend running on port 8500:  uvicorn app.main:app --port 8500
 
 Runs a battery of natural-language questions through /api/chat/data and
 validates the full pipeline: LLM tool selection → API call → response formatting.
@@ -13,7 +13,7 @@ import asyncio
 import json
 import sys
 
-API_BASE = "http://localhost:8100"
+API_BASE = "http://localhost:8500"
 
 # Test cases: (question, expected_tool, description)
 TEST_CASES = [
@@ -109,7 +109,7 @@ async def run_tests():
             print(f"\nForteAI backend: OK ({API_BASE})")
         except Exception:
             print(f"\nERROR: Cannot reach ForteAI at {API_BASE}")
-            print("Start it with: uvicorn app.main:app --port 8100")
+            print("Start it with: uvicorn app.main:app --port 8500")
             sys.exit(1)
 
         # Pre-check: is mock ChiroCloud running?
