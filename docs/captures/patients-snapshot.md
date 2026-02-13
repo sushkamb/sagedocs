@@ -1,0 +1,246 @@
+- generic [ref=e1]:
+  - generic [ref=e2]:
+    - banner [ref=e3]:
+      - generic [ref=e4]:
+        - generic [ref=e5]:
+          - img [ref=e6]
+          - generic [ref=e7]:
+            - text: "Account: 33850"
+            - text: Welcome Christopher Smith
+        - generic [ref=e8]:
+          - menubar [ref=e10]:
+            - menuitem " Help " [ref=e11]:
+              - generic [ref=e12] [cursor=pointer]:
+                - generic [ref=e13]:
+                  - generic [ref=e14]: 
+                  - text: Help
+                - generic [ref=e16]: 
+              - text: 
+          - generic [ref=e17]:
+            - generic [ref=e18]: 
+            - text: User Preferences
+          - generic [ref=e19]:
+            - generic [ref=e20]: 
+            - link "Logout" [ref=e21] [cursor=pointer]:
+              - /url: ../logout.html
+    - generic [ref=e22]:
+      - tablist [active] [ref=e23]:
+        - generic [ref=e24]:
+          - tab " Home" [ref=e25]:
+            - generic [ref=e27] [cursor=pointer]:
+              - generic [ref=e28]: 
+              - text: Home
+          - tab " Patients" [ref=e29]:
+            - generic [ref=e31] [cursor=pointer]:
+              - generic [ref=e32]: 
+              - text: Patients
+          - tab " Calendar" [ref=e33]:
+            - generic [ref=e35] [cursor=pointer]:
+              - generic [ref=e36]: 
+              - text: Calendar
+          - tab " Financials" [ref=e37]:
+            - generic [ref=e39] [cursor=pointer]:
+              - generic [ref=e40]: 
+              - text: Financials
+          - tab " Reports" [ref=e41]:
+            - generic [ref=e43] [cursor=pointer]:
+              - generic [ref=e44]: 
+              - text: Reports
+          - tab " Administration" [ref=e45]:
+            - generic [ref=e47] [cursor=pointer]:
+              - generic [ref=e48]: 
+              - text: Administration
+          - tab " Tools" [ref=e49]:
+            - generic [ref=e51] [cursor=pointer]:
+              - generic [ref=e52]: 
+              - text: Tools
+          - tab " Patient Chat" [ref=e53]:
+            - generic [ref=e55] [cursor=pointer]:
+              - generic [ref=e56]: 
+              - text: Patient Chat
+      - generic [ref=e57]:
+        - generic [ref=e58] [cursor=pointer]:
+          - generic [ref=e59]: 
+          - text: Appointments
+        - generic [ref=e60] [cursor=pointer]:
+          - generic [ref=e61]: 
+          - text: Patient Search
+    - main [ref=e62]:
+      - generic [ref=e63]:
+        - list [ref=e66]:
+          - listitem [ref=e67]:
+            - generic [ref=e68] [cursor=pointer]: Patient Lookup
+          - listitem [ref=e2078]:
+            - button "Andrew Little020226 (Andy) " [ref=e2079] [cursor=pointer]:
+              - text: Andrew Little020226 (Andy)
+              - generic [ref=e2080]: 
+        - generic:
+          - text:    X    
+          - generic:
+            - tree [ref=e2084]:
+              - treeitem " Overview" [selected] [ref=e2085]:
+                - generic [ref=e2087]:
+                  - generic [ref=e2088]: 
+                  - text: Overview
+              - treeitem " Demographics" [ref=e2089]:
+                - generic [ref=e2091]:
+                  - generic [ref=e2092]: 
+                  - text: Demographics
+              - treeitem " Employer" [ref=e2093]:
+                - generic [ref=e2095]:
+                  - generic [ref=e2096]: 
+                  - text: Employer
+              - treeitem " Insurance" [ref=e2097]:
+                - generic [ref=e2099]:
+                  - generic [ref=e2100]: 
+                  - text: Insurance
+              - treeitem " Patient History" [ref=e2101]:
+                - generic [ref=e2103]:
+                  - generic [ref=e2104]: 
+                  - text: Patient History
+              - treeitem " Cases" [ref=e2105]:
+                - generic [ref=e2107]:
+                  - generic [ref=e2108]: 
+                  - text: Cases
+              - treeitem " Visits / EHR" [ref=e2109]:
+                - generic [ref=e2111]:
+                  - generic [ref=e2112]: 
+                  - text: Visits / EHR
+              - treeitem " Ledger " [ref=e2113]:
+                - generic [ref=e2114]:
+                  - generic [ref=e2115]:
+                    - generic [ref=e2116]: 
+                    - text: Ledger
+                  - generic [ref=e2117]: 
+                - group [ref=e2118]:
+                  - treeitem " Edit Posting" [ref=e2119]:
+                    - generic [ref=e2121]:
+                      - generic [ref=e2122]: 
+                      - text: Edit Posting
+                  - treeitem " Charges" [ref=e2123]:
+                    - generic [ref=e2125]:
+                      - generic [ref=e2126]: 
+                      - text: Charges
+                  - treeitem " Payments" [ref=e2127]:
+                    - generic [ref=e2129]:
+                      - generic [ref=e2130]: 
+                      - text: Payments
+                  - treeitem " Legacy Postings" [ref=e2131]:
+                    - generic [ref=e2133]:
+                      - generic [ref=e2134]: 
+                      - text: Legacy Postings
+              - treeitem " Record Center" [ref=e2135]:
+                - generic [ref=e2137]:
+                  - generic [ref=e2138]: 
+                  - text: Record Center
+            - generic [ref=e2139]:
+              - listbox [ref=e2141] [cursor=pointer]:
+                - option "Quick Selection" [selected] [ref=e2142]:
+                  - generic [ref=e2143]: Quick Selection
+                - button "select" [ref=e2144]:
+                  - generic: 
+              - button "Save" [ref=e2146] [cursor=pointer]
+              - generic [ref=e2151]:
+                - generic [ref=e2152]:
+                  - img "undefined" [ref=e2155]
+                  - generic [ref=e2156]:
+                    - list [ref=e2157]:
+                      - listitem [ref=e2158]:
+                        - text: "Account No:"
+                        - generic [ref=e2159]: "18601"
+                      - listitem [ref=e2160]:
+                        - text: "Name:"
+                        - generic [ref=e2161]: Andrew Little020226 (Andy)
+                      - listitem [ref=e2162]:
+                        - text: "DOB:"
+                        - generic [ref=e2163]: 01/18/1989
+                      - listitem [ref=e2164]:
+                        - text: "Age:"
+                        - generic [ref=e2165]: "37"
+                      - listitem [ref=e2166]:
+                        - text: "Gender:"
+                        - generic [ref=e2167]: Male
+                      - listitem [ref=e2168]:
+                        - text: "Phone:"
+                        - generic [ref=e2169]: (916) 988-7877 (Home)
+                      - listitem [ref=e2170]:
+                        - text: "Email:"
+                        - generic [ref=e2171]: alittle@forteholdings.com
+                      - listitem [ref=e2172]:
+                        - text: "Address:"
+                        - generic [ref=e2173]: 6221 Green Eyes Way
+                      - listitem [ref=e2174]:
+                        - text: "Address 2:"
+                        - generic [ref=e2175]: Unit 101 Orangevale CA 95662
+                      - listitem [ref=e2176]: "Last Appointment:"
+                      - listitem [ref=e2177]: "Next Appointment:"
+                    - button "Contact Patient" [ref=e2178] [cursor=pointer]
+                - generic [ref=e2179]:
+                  - generic [ref=e2180]:
+                    - generic [ref=e2181]:
+                      - generic [ref=e2182]:
+                        - generic [ref=e2183]: Number of Visits
+                        - generic [ref=e2184]: 
+                      - generic [ref=e2185]: "1"
+                    - generic [ref=e2186]:
+                      - generic [ref=e2187]:
+                        - generic [ref=e2188]: Outstanding Claims
+                        - generic [ref=e2189]: 
+                      - generic [ref=e2190]: $100.00
+                  - generic [ref=e2191]:
+                    - generic [ref=e2193]:
+                      - generic [ref=e2194]: Initial Complaint
+                      - generic [ref=e2195]: 
+                    - generic [ref=e2196]:
+                      - generic [ref=e2197]:
+                        - generic [ref=e2198]: Unapplied Credit
+                        - generic [ref=e2199]: 
+                      - generic [ref=e2200]:
+                        - text: "Insurance: $0.00"
+                        - text: "Patient: $0.00"
+                  - generic [ref=e2201]:
+                    - generic [ref=e2202]:
+                      - generic [ref=e2203]:
+                        - generic [ref=e2204]: Insurance on File
+                        - generic [ref=e2205]: 
+                      - generic [ref=e2206]: Medicare, Kaiser of Northern California
+                    - generic [ref=e2207]:
+                      - generic [ref=e2208]:
+                        - generic [ref=e2209]: Patient Balance
+                        - generic [ref=e2210]: 
+                      - generic [ref=e2211]:
+                        - text: "Insurance: $100.00"
+                        - text: "Patient: $0.00"
+                  - generic [ref=e2212]:
+                    - button "Statement" [ref=e2213] [cursor=pointer]
+                    - button "Patient Portal" [ref=e2214] [cursor=pointer]
+                    - button "Claim" [ref=e2215] [cursor=pointer]
+                    - button "Appointment" [ref=e2216] [cursor=pointer]
+                    - button "Future Appointment" [ref=e2217] [cursor=pointer]
+                  - generic [ref=e2218]:
+                    - generic [ref=e2219]:
+                      - generic [ref=e2220]:
+                        - text: Alerts
+                        - generic [ref=e2223] [cursor=pointer]: 
+                      - generic [ref=e2225]:
+                        - grid:
+                          - rowgroup:
+                            - row
+                          - rowgroup
+                    - generic [ref=e2226]:
+                      - generic [ref=e2227]:
+                        - text: Notes
+                        - generic [ref=e2230] [cursor=pointer]: 
+                      - generic [ref=e2232]:
+                        - grid:
+                          - rowgroup:
+                            - row
+                          - rowgroup
+      - text:                                                                                                                                                                                                                                                                                                                              
+  - contentinfo [ref=e651]:
+    - text: © 2024 Forte Holdings.
+    - generic [ref=e652]: TurnCloud
+    - generic [ref=e653]: 𝜋
+  - text:                      
+  - button "Chat with ForteAI" [ref=e655] [cursor=pointer]:
+    - img [ref=e656]
