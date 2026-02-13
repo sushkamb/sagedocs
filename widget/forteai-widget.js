@@ -207,30 +207,27 @@
         },
 
         _formatMarkdown: function (text) {
-            var html = text
-                // Escape HTML entities first
+            if (typeof marked !== "undefined" && typeof DOMPurify !== "undefined") {
+                var renderer = new marked.Renderer();
+                renderer.link = function (token) {
+                    return '<a href="' + token.href + '" target="_blank" rel="noopener noreferrer">' + (token.text || token.href) + '</a>';
+                };
+
+                marked.setOptions({
+                    breaks: true,
+                    gfm: true,
+                    renderer: renderer
+                });
+
+                var rawHtml = marked.parse(text);
+                return DOMPurify.sanitize(rawHtml, { ADD_ATTR: ['target'] });
+            }
+
+            return text
                 .replace(/&/g, "&amp;")
                 .replace(/</g, "&lt;")
                 .replace(/>/g, "&gt;")
-                // Code blocks (```)
-                .replace(/```([\s\S]*?)```/g, '<pre class="forteai-code-block">$1</pre>')
-                // Inline code
-                .replace(/`([^`]+)`/g, '<code class="forteai-inline-code">$1</code>')
-                // Bold
-                .replace(/\*\*(.+?)\*\*/g, "<strong>$1</strong>")
-                // Italic
-                .replace(/\*(.+?)\*/g, "<em>$1</em>")
-                // Numbered lists
-                .replace(/^\d+\.\s+(.+)$/gm, '<li class="forteai-ol-item">$1</li>')
-                // Bullet lists (- or *)
-                .replace(/^[\-\*]\s+(.+)$/gm, '<li class="forteai-ul-item">$1</li>')
-                // Wrap consecutive <li> items in <ul>
-                .replace(/((?:<li class="forteai-[uo]l-item">.*<\/li>\n?)+)/g, '<ul class="forteai-list">$1</ul>')
-                // Line breaks (double newline = paragraph, single = <br>)
-                .replace(/\n\n/g, "</p><p>")
                 .replace(/\n/g, "<br>");
-
-            return "<p>" + html + "</p>";
         },
 
         _addMessage: function (role, text, sources, images) {
