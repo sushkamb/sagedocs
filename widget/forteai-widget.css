@@ -317,7 +317,7 @@
     box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
 }
 
-/* Formatted Message Content */
+/* Formatted Message Content — Markdown Elements */
 .forteai-msg-text p {
     margin: 0 0 8px 0;
 }
@@ -330,44 +330,46 @@
     font-weight: 600;
 }
 
-.forteai-list {
-    list-style: none;
-    padding-left: 0;
+/* Headings */
+.forteai-msg-text h1,
+.forteai-msg-text h2,
+.forteai-msg-text h3,
+.forteai-msg-text h4 {
+    font-weight: 600;
+    margin: 12px 0 6px 0;
+    line-height: 1.3;
+}
+
+.forteai-msg-text h1 { font-size: 1.2em; }
+.forteai-msg-text h2 { font-size: 1.1em; }
+.forteai-msg-text h3 { font-size: 1.05em; }
+.forteai-msg-text h4 { font-size: 1em; }
+
+.forteai-msg-text h1:first-child,
+.forteai-msg-text h2:first-child,
+.forteai-msg-text h3:first-child,
+.forteai-msg-text h4:first-child {
+    margin-top: 0;
+}
+
+/* Lists */
+.forteai-msg-text ul,
+.forteai-msg-text ol {
     margin: 6px 0;
+    padding-left: 20px;
 }
 
-.forteai-ul-item {
-    padding-left: 16px;
-    position: relative;
+.forteai-msg-text li {
     margin-bottom: 4px;
 }
 
-.forteai-ul-item::before {
-    content: "\2022";
-    position: absolute;
-    left: 4px;
-    font-weight: bold;
+.forteai-msg-text li > ul,
+.forteai-msg-text li > ol {
+    margin: 2px 0;
 }
 
-.forteai-ol-item {
-    padding-left: 16px;
-    position: relative;
-    margin-bottom: 4px;
-    counter-increment: forteai-ol;
-}
-
-.forteai-list {
-    counter-reset: forteai-ol;
-}
-
-.forteai-ol-item::before {
-    content: counter(forteai-ol) ".";
-    position: absolute;
-    left: 0;
-    font-weight: 500;
-}
-
-.forteai-code-block {
+/* Code */
+.forteai-msg-text pre {
     background: rgba(0, 0, 0, 0.06);
     border-radius: 6px;
     padding: 8px 10px;
@@ -378,12 +380,74 @@
     white-space: pre-wrap;
 }
 
-.forteai-inline-code {
+.forteai-msg-text code {
     background: rgba(0, 0, 0, 0.06);
     border-radius: 3px;
     padding: 1px 5px;
     font-family: "SFMono-Regular", Consolas, monospace;
     font-size: 12px;
+}
+
+.forteai-msg-text pre code {
+    background: none;
+    padding: 0;
+    border-radius: 0;
+}
+
+/* Tables */
+.forteai-msg-text table {
+    border-collapse: collapse;
+    width: 100%;
+    margin: 8px 0;
+    font-size: 13px;
+    display: block;
+    overflow-x: auto;
+}
+
+.forteai-msg-text th,
+.forteai-msg-text td {
+    border: 1px solid rgba(0, 0, 0, 0.12);
+    padding: 6px 10px;
+    text-align: left;
+}
+
+.forteai-msg-text th {
+    background: rgba(0, 0, 0, 0.04);
+    font-weight: 600;
+}
+
+.forteai-msg-text tr:nth-child(even) {
+    background: rgba(0, 0, 0, 0.02);
+}
+
+/* Blockquotes */
+.forteai-msg-text blockquote {
+    border-left: 3px solid #0066cc;
+    background: rgba(0, 102, 204, 0.05);
+    margin: 8px 0;
+    padding: 6px 12px;
+    color: #555;
+}
+
+.forteai-msg-text blockquote p {
+    margin: 0;
+}
+
+/* Links */
+.forteai-msg-text a {
+    color: #0066cc;
+    text-decoration: none;
+}
+
+.forteai-msg-text a:hover {
+    text-decoration: underline;
+}
+
+/* Horizontal Rules */
+.forteai-msg-text hr {
+    border: none;
+    border-top: 1px solid rgba(0, 0, 0, 0.1);
+    margin: 10px 0;
 }
 
 /* Responsive */
