@@ -1,3 +1,5 @@
+import json
+import os
 import re
 
 import chromadb
@@ -26,8 +28,48 @@ class RAGEngine:
         """Get or create a ChromaDB collection for a tenant."""
         return self.chroma_client.get_or_create_collection(
             name=f"tenant_{tenant}",
-            metadata={"description": f"Help documents for {tenant}"},
+            metadata={"hnsw:space": "cosine"},
         )
+
+    def _load_tenant_config(self, tenant: str) -> dict:
+        """Load per-tenant configuration from JSON file."""
+        config_path = os.path.join(settings.chroma_persist_dir, "..", "tenants", f"{tenant}.json")
+        if os.path.exists(config_path):
+            with open(config_path, "r") as f:
+                return json.load(f)
+        return {}
+
+    def _rerank(self, question: str, candidates: list[dict]) -> list[dict]:
+        """Rerank candidates using combined embedding distance + keyword overlap score."""
+        # Extract question keywords (lowercase, 3+ chars, no stopwords)
+        stopwords = {"the", "a", "an", "is", "are", "was", "were", "be", "been", "being",
+                     "have", "has", "had", "do", "does", "did", "will", "would", "could",
+                     "should", "may", "might", "can", "shall", "for", "and", "but", "or",
+                     "nor", "not", "so", "yet", "both", "either", "neither", "each", "every",
+                     "all", "any", "few", "more", "most", "other", "some", "such", "than",
+                     "too", "very", "just", "how", "what", "when", "where", "which", "who",
+                     "why", "this", "that", "these", "those", "with", "from", "into", "about"}
+
+        words = re.findall(r'\b\w+\b', question.lower())
+        keywords = [w for w in words if len(w) >= 3 and w not in stopwords]
+
+        if not keywords:
+            # Fall back to distance-only ranking
+            return sorted(candidates, key=lambda c: c["distance"])
+
+        for candidate in candidates:
+            # Distance score: 0 (worst) to 1 (best)
+            distance_score = 1.0 - candidate["distance"]
+
+            # Keyword overlap score
+            chunk_lower = candidate["text"].lower()
+            matches = sum(1 for kw in keywords if kw in chunk_lower)
+            keyword_score = matches / len(keywords)
+
+            # Combined score (distance weighted more heavily)
+            candidate["score"] = distance_score * 0.7 + keyword_score * 0.3
+
+        return sorted(candidates, key=lambda c: c["score"], reverse=True)
 
     def ingest_document(self, file_path: str, title: str, tenant: str) -> int:
         """Process and store a document. Returns the number of chunks created."""
@@ -59,58 +101,102 @@ class RAGEngine:
         if results["ids"]:
             collection.delete(ids=results["ids"])
 
-    def query(self, tenant: str, question: str, top_k: int = 5) -> dict:
-        """Answer a question using RAG. Returns { reply, sources }."""
+    def query(self, tenant: str, question: str, top_k: int = None) -> dict:
+        """Answer a question using RAG with similarity filtering and reranking."""
+        tenant_config = self._load_tenant_config(tenant)
+
+        final_k = top_k or tenant_config.get("rag_top_k") or settings.rag_top_k
+        retrieval_k = settings.rag_retrieval_k
+        temperature = tenant_config.get("help_temperature") or settings.help_temperature
 
         collection = self._get_collection(tenant)
-
-        # Embed the question and retrieve relevant chunks
         question_embedding = self.llm.get_embedding(question)
 
         results = collection.query(
             query_embeddings=[question_embedding],
-            n_results=top_k,
+            n_results=retrieval_k,
             where={"tenant": tenant},
+            include=["documents", "metadatas", "distances"],
         )
 
         if not results["documents"] or not results["documents"][0]:
             return {
                 "reply": "I don't have any documentation to answer that question yet. Please contact support for help.",
                 "sources": [],
+                "images": [],
             }
 
-        # Build context from retrieved chunks and collect image references
+        # Filter by similarity threshold and rerank
+        candidates = []
+        for i, doc in enumerate(results["documents"][0]):
+            distance = results["distances"][0][i]
+            if distance > settings.similarity_threshold:
+                continue
+            meta = results["metadatas"][0][i]
+            candidates.append({
+                "text": doc,
+                "metadata": meta,
+                "distance": distance,
+            })
+
+        if not candidates:
+            return {
+                "reply": "I couldn't find documentation closely matching your question. Could you rephrase it, or contact support for help?",
+                "sources": [],
+                "images": [],
+            }
+
+        # Rerank: combined score of embedding distance + keyword overlap
+        ranked = self._rerank(question, candidates)
+        top_chunks = ranked[:final_k]
+
+        # Build context ordered by relevance
         context_parts = []
         sources = []
         image_filenames = []
-        for i, doc in enumerate(results["documents"][0]):
-            meta = results["metadatas"][0][i]
-            context_parts.append(f"[Source: {meta.get('title', 'Unknown')}]\n{doc}")
+        for i, chunk in enumerate(top_chunks):
+            meta = chunk["metadata"]
+            relevance = "HIGH" if i < 3 else "MEDIUM"
+            context_parts.append(f"[Source: {meta.get('title', 'Unknown')} | Relevance: {relevance}]\n{chunk['text']}")
             sources.append({
                 "title": meta.get("title", "Unknown"),
                 "filename": meta.get("filename", ""),
                 "chunk_index": meta.get("chunk_index", 0),
             })
-            # Extract image filenames from [Screenshot: filename | description] markers
-            for match in SCREENSHOT_PATTERN.finditer(doc):
+            for match in SCREENSHOT_PATTERN.finditer(chunk["text"]):
                 img_file = match.group(1)
                 if img_file not in image_filenames:
                     image_filenames.append(img_file)
 
         context = "\n\n---\n\n".join(context_parts)
 
+        # Build system prompt with per-tenant customization
+        tenant_display = tenant_config.get("display_name", tenant)
+        custom_instructions = tenant_config.get("system_prompt", "")
+
         system_prompt = (
-            "You are ForteAI, a helpful assistant. Answer the user's question "
-            "using ONLY the following documentation. If the answer is not in the "
-            "documentation, say so clearly and suggest contacting support.\n\n"
-            "Be concise and direct. Use bullet points for step-by-step instructions. "
-            "The documentation may include [Screenshot: ...] markers describing UI screenshots. "
-            "Use those descriptions to give specific visual guidance (e.g. 'click the Save button "
-            "in the top-right corner').\n\n"
-            f"Documentation:\n{context}"
+            f"You are ForteAI, an expert support assistant for {tenant_display}. "
+            "Your role is to help users by answering questions accurately using the provided documentation.\n\n"
         )
 
-        result = self.llm.chat(system_prompt, question)
+        if custom_instructions:
+            system_prompt += f"## Additional Instructions\n{custom_instructions}\n\n"
+
+        system_prompt += (
+            "## Rules\n"
+            "- Answer ONLY based on the documentation provided below. Do not use outside knowledge.\n"
+            "- If the documentation does not contain enough information to fully answer, clearly state what "
+            "you found and what is missing, then suggest contacting support.\n"
+            "- Be concise and direct. Use bullet points or numbered steps for procedures.\n"
+            "- When documentation includes [Screenshot: ...] markers, reference those visual descriptions "
+            "to give specific UI guidance (e.g., 'click the blue Save button in the top-right corner').\n"
+            "- Quote specific UI labels, button names, and menu paths exactly as they appear.\n"
+            "- If multiple sources cover the topic, synthesize into a coherent answer.\n"
+            "- Chunks marked HIGH relevance are most likely to contain the answer.\n\n"
+            f"## Documentation (ordered by relevance)\n{context}"
+        )
+
+        result = self.llm.chat(system_prompt, question, temperature=temperature)
 
         # Deduplicate sources
         seen = set()
@@ -121,10 +207,7 @@ class RAGEngine:
                 seen.add(key)
                 unique_sources.append(s)
 
-        # Build image URLs
-        image_urls = [
-            f"/data/images/{tenant}/{img}" for img in image_filenames
-        ]
+        image_urls = [f"/data/images/{tenant}/{img}" for img in image_filenames]
 
         return {
             "reply": result["reply"],

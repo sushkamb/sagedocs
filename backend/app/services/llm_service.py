@@ -1,7 +1,10 @@
 import base64
+import logging
 
-from openai import OpenAI
+from openai import OpenAI, BadRequestError
 from app.config import settings
+
+logger = logging.getLogger(__name__)
 
 
 class LLMService:
@@ -17,26 +20,39 @@ class LLMService:
             import anthropic
             self.client = anthropic.Anthropic(api_key=api_key or settings.anthropic_api_key)
 
-    def chat(self, system_prompt: str, user_message: str, tools: list = None) -> dict:
+    def chat(self, system_prompt: str, user_message: str, tools: list = None,
+             temperature: float = None, max_tokens: int = 2048) -> dict:
         """Send a chat message and get a response. Returns { reply, tool_calls }."""
 
         if self.provider == "openai":
-            return self._chat_openai(system_prompt, user_message, tools)
+            return self._chat_openai(system_prompt, user_message, tools, temperature, max_tokens)
         elif self.provider == "anthropic":
-            return self._chat_anthropic(system_prompt, user_message, tools)
+            return self._chat_anthropic(system_prompt, user_message, tools, temperature, max_tokens)
 
-    def _chat_openai(self, system_prompt: str, user_message: str, tools: list = None) -> dict:
+    def _chat_openai(self, system_prompt: str, user_message: str, tools: list = None,
+                      temperature: float = None, max_tokens: int = 2048) -> dict:
         messages = [
             {"role": "system", "content": system_prompt},
             {"role": "user", "content": user_message},
         ]
 
         kwargs = {"model": self.model, "messages": messages}
+        if temperature is not None:
+            kwargs["temperature"] = temperature
         if tools:
             kwargs["tools"] = tools
             kwargs["tool_choice"] = "auto"
 
-        response = self.client.chat.completions.create(**kwargs)
+        try:
+            response = self.client.chat.completions.create(**kwargs)
+        except BadRequestError as e:
+            # Some models don't support temperature — retry without it
+            if "temperature" in str(e) and "temperature" in kwargs:
+                logger.info(f"Model {self.model} doesn't support temperature, retrying without it")
+                del kwargs["temperature"]
+                response = self.client.chat.completions.create(**kwargs)
+            else:
+                raise
         choice = response.choices[0]
 
         result = {"reply": "", "tool_calls": []}
@@ -55,14 +71,17 @@ class LLMService:
 
         return result
 
-    def _chat_anthropic(self, system_prompt: str, user_message: str, tools: list = None) -> dict:
+    def _chat_anthropic(self, system_prompt: str, user_message: str, tools: list = None,
+                         temperature: float = None, max_tokens: int = 2048) -> dict:
         kwargs = {
             "model": self.model,
-            "max_tokens": 2048,
+            "max_tokens": max_tokens,
             "system": system_prompt,
             "messages": [{"role": "user", "content": user_message}],
         }
 
+        if temperature is not None:
+            kwargs["temperature"] = temperature
         if tools:
             kwargs["tools"] = self._convert_tools_to_anthropic(tools)
 

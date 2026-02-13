@@ -1,4 +1,5 @@
 import json
+import os
 import yaml
 import httpx
 from pathlib import Path
@@ -60,6 +61,15 @@ class QueryEngine:
 
         return openai_tools
 
+    def _load_tenant_config(self, tenant: str) -> dict:
+        config_path = os.path.join(
+            os.path.dirname(__file__), "..", "..", "data", "tenants", f"{tenant}.json"
+        )
+        if os.path.exists(config_path):
+            with open(config_path, "r") as f:
+                return json.load(f)
+        return {}
+
     def _get_tool_config(self, tenant: str, tool_name: str) -> dict:
         """Get a specific tool's config from the registry."""
         registry = self.tool_registries.get(tenant, {})
@@ -85,18 +95,27 @@ class QueryEngine:
                 "sources": [],
             }
 
+        tenant_config = self._load_tenant_config(tenant)
+        tenant_display = tenant_config.get("display_name", tenant)
+        temperature = tenant_config.get("data_temperature") or settings.data_temperature
+
         registry = self.tool_registries.get(tenant, {})
         base_url = base_url or registry.get("base_url", "")
 
         system_prompt = (
-            "You are ForteAI, a data assistant. You help users get information "
-            "from their application by calling the available tools. "
-            "Always be concise and format numbers clearly. "
-            "If a question can't be answered with the available tools, say so."
+            f"You are ForteAI, a data assistant for {tenant_display}. "
+            "You help users retrieve and understand information from their application.\n\n"
+            "## Instructions\n"
+            "- Use the available tools to answer the user's question. Call multiple tools if needed.\n"
+            "- Format numbers with appropriate separators (e.g., 1,234 not 1234).\n"
+            "- Format currency values with $ and two decimal places.\n"
+            "- Present data clearly: use tables for comparisons, lists for enumerations.\n"
+            "- If a question cannot be answered with the available tools, explain what data "
+            "is available and suggest how the user might rephrase their question."
         )
 
         # First call — LLM decides which tool(s) to use
-        result = self.llm.chat(system_prompt, question, tools)
+        result = self.llm.chat(system_prompt, question, tools, temperature=temperature)
 
         if not result["tool_calls"]:
             return {"reply": result["reply"], "sources": []}
@@ -132,7 +151,7 @@ class QueryEngine:
             "Please provide a clear, concise answer based on these results."
         )
 
-        final_result = self.llm.chat(system_prompt, followup_prompt)
+        final_result = self.llm.chat(system_prompt, followup_prompt, temperature=temperature)
 
         return {"reply": final_result["reply"], "sources": []}
 

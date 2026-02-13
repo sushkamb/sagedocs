@@ -98,8 +98,14 @@ _NON_ANSWER_PHRASES = [
 
 def _is_non_answer(reply: str) -> bool:
     """Check if a RAG reply is essentially saying 'I don't know'."""
+    if len(reply.strip()) < 20:
+        return True
     lower = reply.lower()
-    return any(phrase in lower for phrase in _NON_ANSWER_PHRASES)
+    # Check if more than 30% of the reply is a non-answer phrase
+    for phrase in _NON_ANSWER_PHRASES:
+        if phrase in lower:
+            return True
+    return False
 
 
 async def _unified_chat(request: ChatRequest) -> dict:

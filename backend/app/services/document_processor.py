@@ -22,10 +22,10 @@ class DocumentProcessor:
     and bakes descriptions into the text for richer RAG context.
     Images are also saved to disk so they can be served in chat responses."""
 
-    def __init__(self, chunk_size: int = 800, chunk_overlap: int = 200):
+    def __init__(self, chunk_size: int = None, chunk_overlap: int = None):
         self.splitter = RecursiveCharacterTextSplitter(
-            chunk_size=chunk_size,
-            chunk_overlap=chunk_overlap,
+            chunk_size=chunk_size or settings.chunk_size,
+            chunk_overlap=chunk_overlap or settings.chunk_overlap,
             length_function=len,
             separators=["\n\n", "\n", ". ", " ", ""],
         )

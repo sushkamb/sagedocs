@@ -46,6 +46,9 @@ class TenantConfig(BaseModel):
     data_mode_enabled: bool = False
     llm_model: Optional[str] = None
     system_prompt: Optional[str] = None
+    help_temperature: Optional[float] = None
+    data_temperature: Optional[float] = None
+    rag_top_k: Optional[int] = None
 
 
 class AnalyticsEntry(BaseModel):
