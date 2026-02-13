@@ -75,6 +75,14 @@
             link.rel = "stylesheet";
             link.href = this.config.apiUrl + "/widget/forteai-widget.css";
             document.head.appendChild(link);
+
+            var markedScript = document.createElement("script");
+            markedScript.src = "https://cdn.jsdelivr.net/npm/marked@15/marked.min.js";
+            document.head.appendChild(markedScript);
+
+            var purifyScript = document.createElement("script");
+            purifyScript.src = "https://cdn.jsdelivr.net/npm/dompurify@3/dist/purify.min.js";
+            document.head.appendChild(purifyScript);
         },
 
         _render: function () {
