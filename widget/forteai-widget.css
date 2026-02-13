@@ -162,11 +162,55 @@
     border-bottom-left-radius: 4px;
 }
 
+/* Collapsible Sources */
 .forteai-msg-sources {
-    font-size: 11px;
-    color: #888;
-    margin-top: 4px;
+    margin-top: 6px;
     padding-left: 4px;
+}
+
+.forteai-msg-sources details {
+    font-size: 12px;
+    color: #666;
+}
+
+.forteai-msg-sources summary {
+    cursor: pointer;
+    user-select: none;
+    font-weight: 500;
+    padding: 4px 0;
+    list-style: none;
+}
+
+.forteai-msg-sources summary::-webkit-details-marker {
+    display: none;
+}
+
+.forteai-msg-sources summary::after {
+    content: " \25B8";
+}
+
+.forteai-msg-sources details[open] summary::after {
+    content: " \25BE";
+}
+
+.forteai-sources-icon {
+    font-size: 13px;
+}
+
+.forteai-sources-list {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 4px;
+    padding: 6px 0 2px 0;
+}
+
+.forteai-source-pill {
+    background: #e8f0fe;
+    color: #0066cc;
+    border-radius: 12px;
+    padding: 3px 10px;
+    font-size: 11px;
+    white-space: nowrap;
 }
 
 /* Starter Questions */

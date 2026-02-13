@@ -267,7 +267,21 @@
             if (sources && sources.length > 0) {
                 var srcDiv = document.createElement("div");
                 srcDiv.className = "forteai-msg-sources";
-                srcDiv.textContent = "Sources: " + sources.map(function (s) { return s.title; }).join(", ");
+                var details = document.createElement("details");
+                var summary = document.createElement("summary");
+                summary.innerHTML = '<span class="forteai-sources-icon">&#128196;</span> Sources (' + sources.length + ')';
+                details.appendChild(summary);
+
+                var srcList = document.createElement("div");
+                srcList.className = "forteai-sources-list";
+                sources.forEach(function (s) {
+                    var pill = document.createElement("span");
+                    pill.className = "forteai-source-pill";
+                    pill.textContent = s.title;
+                    srcList.appendChild(pill);
+                });
+                details.appendChild(srcList);
+                srcDiv.appendChild(details);
                 msgDiv.appendChild(srcDiv);
             }
 
