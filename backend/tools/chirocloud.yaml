@@ -2,7 +2,7 @@
 # Each tool maps to a read-only API endpoint in ChiroCloud
 # Endpoint convention: /api/{Controller}/{Action} (PascalCase)
 
-base_url: https://localhost:44322
+base_url: https://my.turncloud.com:4133
 
 tools:
   - name: get_patient_count

@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html>
+<head><title>ForteAI Formatting Test</title></head>
+<body style="font-family: sans-serif; padding: 20px;">
+  <h1>ForteAI Widget — Formatting Test</h1>
+  <p>The chat widget should appear in the bottom-right corner. Click it to open.</p>
+  <p>Type any message — the widget will simulate a rich markdown response to verify formatting.</p>
+
+  <script src="http://localhost:8500/widget/forteai-widget.js"></script>
+  <script>
+    ForteAI.init({
+      tenant: 'chirocloud',
+      apiUrl: 'http://localhost:8500'
+    });
+
+    // Override _sendMessage to inject a rich markdown test response
+    ForteAI._sendMessage = function () {
+      var input = document.getElementById("forteai-input");
+      var message = input.value.trim();
+      if (!message) return;
+
+      this._addMessage("user", message);
+      input.value = "";
+      this._showTyping();
+
+      var self = this;
+      setTimeout(function () {
+        self._hideTyping();
+
+        var testMarkdown = "## Getting Started with Billing\n\n" +
+          "Here's how to set up billing in **ChiroCloud**:\n\n" +
+          "### Step 1: Navigate to Settings\n\n" +
+          "Go to **Settings > Billing > Plans** and click the **Configure** button.\n\n" +
+          "### Step 2: Choose Your Plan\n\n" +
+          "| Plan | Price | Features |\n" +
+          "|------|-------|----------|\n" +
+          "| Basic | $49/mo | 1 provider, 100 patients |\n" +
+          "| Pro | $99/mo | 5 providers, unlimited patients |\n" +
+          "| Enterprise | $199/mo | Unlimited everything |\n\n" +
+          "> **Important:** Changes to your plan take effect at the start of the next billing cycle.\n\n" +
+          "### Step 3: Enter Payment Details\n\n" +
+          "1. Click **Add Payment Method**\n" +
+          "2. Enter your credit card information\n" +
+          "3. Click **Save** to confirm\n\n" +
+          "For more details, visit [ChiroCloud Docs](https://docs.chirocloud.com).\n\n" +
+          "Here's an example API call:\n\n" +
+          "```\nGET /api/billing/plans\nAuthorization: Bearer <token>\n```\n\n" +
+          "- Free trial is available for *14 days*\n" +
+          "- No credit card required for the trial\n" +
+          "- Cancel anytime from **Settings > Billing**";
+
+        self._addMessage("assistant", testMarkdown, [
+          { title: "Billing Setup Guide" },
+          { title: "Plan Comparison" },
+          { title: "Payment FAQ" }
+        ]);
+      }, 800);
+    };
+  </script>
+</body>
+</html>
