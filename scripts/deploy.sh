@@ -13,6 +13,8 @@ set -euo pipefail
 # --- Configuration ---
 SRC_DIR="/home/ubuntu/ForteAIBot"
 DEPLOY_DIR="/var/www/forteaibot"
+BACKUP_DIR="/var/www/backups/forteaibot"
+MAX_BACKUPS=5
 SERVICE_USER="www-data"
 SERVICE_GROUP="www-data"
 SERVICE_NAME="forteaibot"
@@ -40,12 +42,38 @@ echo "Target:  $DEPLOY_DIR"
 echo ""
 
 # --- Step 1: Pull latest code in source repo ---
-echo "[1/6] Pulling latest code in $SRC_DIR..."
+echo "[1/7] Pulling latest code in $SRC_DIR..."
 cd "$SRC_DIR"
 sudo -u ubuntu git pull || echo "Warning: git pull failed (may not have remote configured)"
 
-# --- Step 2: Create deploy dir and sync code ---
-echo "[2/6] Syncing code to $DEPLOY_DIR..."
+# --- Step 2: Back up current deployment ---
+if [[ -d "$DEPLOY_DIR/backend" ]]; then
+    TIMESTAMP=$(date +%Y%m%d_%H%M%S)
+    BACKUP_PATH="$BACKUP_DIR/$TIMESTAMP"
+    echo "[2/7] Backing up current deployment to $BACKUP_PATH..."
+    mkdir -p "$BACKUP_DIR"
+
+    rsync -a \
+        --exclude 'venv/' \
+        --exclude '__pycache__/' \
+        --exclude '*.pyc' \
+        "$DEPLOY_DIR/" "$BACKUP_PATH/"
+
+    echo "  Backup saved."
+
+    # Prune old backups, keep only the most recent $MAX_BACKUPS
+    BACKUP_COUNT=$(ls -1d "$BACKUP_DIR"/[0-9]* 2>/dev/null | wc -l)
+    if [[ "$BACKUP_COUNT" -gt "$MAX_BACKUPS" ]]; then
+        REMOVE_COUNT=$((BACKUP_COUNT - MAX_BACKUPS))
+        echo "  Pruning $REMOVE_COUNT old backup(s)..."
+        ls -1d "$BACKUP_DIR"/[0-9]* | head -n "$REMOVE_COUNT" | xargs rm -rf
+    fi
+else
+    echo "[2/7] No existing deployment to back up (first deploy)."
+fi
+
+# --- Step 3: Create deploy dir and sync code ---
+echo "[3/7] Syncing code to $DEPLOY_DIR..."
 mkdir -p "$DEPLOY_DIR"
 
 rsync -a --delete \
@@ -60,24 +88,24 @@ rsync -a --delete \
 
 echo "  Files synced."
 
-# --- Step 3: Set up venv and install dependencies (skip on --update) ---
+# --- Step 4: Set up venv and install dependencies (skip on --update) ---
 if [[ "$UPDATE_ONLY" == false ]]; then
-    echo "[3/6] Setting up Python virtual environment..."
+    echo "[4/7] Setting up Python virtual environment..."
     if [[ ! -d "$DEPLOY_DIR/venv" ]]; then
         python3 -m venv "$DEPLOY_DIR/venv"
         echo "  Created new venv."
     fi
 else
-    echo "[3/6] Skipping venv setup (--update mode)."
+    echo "[4/7] Skipping venv setup (--update mode)."
 fi
 
 echo "  Installing/updating dependencies..."
 "$DEPLOY_DIR/venv/bin/pip" install --quiet --upgrade pip
 "$DEPLOY_DIR/venv/bin/pip" install --quiet -r "$DEPLOY_DIR/backend/requirements.txt"
 
-# --- Step 4: Create data directories (skip on --update) ---
+# --- Step 5: Create data directories (skip on --update) ---
 if [[ "$UPDATE_ONLY" == false ]]; then
-    echo "[4/6] Creating data directories..."
+    echo "[5/7] Creating data directories..."
     mkdir -p "$DEPLOY_DIR/backend/data/chroma" \
              "$DEPLOY_DIR/backend/data/images" \
              "$DEPLOY_DIR/backend/data/analytics" \
@@ -85,15 +113,15 @@ if [[ "$UPDATE_ONLY" == false ]]; then
              "$DEPLOY_DIR/backend/uploads"
     echo "  Data directories ready."
 else
-    echo "[4/6] Skipping directory setup (--update mode)."
+    echo "[5/7] Skipping directory setup (--update mode)."
 fi
 
-# --- Step 5: Fix ownership ---
-echo "[5/6] Setting ownership to $SERVICE_USER:$SERVICE_GROUP..."
+# --- Step 6: Fix ownership ---
+echo "[6/7] Setting ownership to $SERVICE_USER:$SERVICE_GROUP..."
 chown -R "$SERVICE_USER":"$SERVICE_GROUP" "$DEPLOY_DIR"
 
-# --- Step 6: Restart service ---
-echo "[6/6] Restarting $SERVICE_NAME service..."
+# --- Step 7: Restart service ---
+echo "[7/7] Restarting $SERVICE_NAME service..."
 if systemctl is-enabled "$SERVICE_NAME" &>/dev/null; then
     systemctl restart "$SERVICE_NAME"
     echo "  Service restarted."
