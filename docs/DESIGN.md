@@ -215,6 +215,8 @@ tools:
 - **Account number scoping** — Every data-mode API call includes the account number; ChiroCloud's API handles schema routing
 - **Read-only endpoints** — The `/api/assistant/*` endpoints in ChiroCloud are strictly GET/read-only
 - **No cross-tenant data leakage** — ForteAI never stores or caches host app data
+- **API key authentication** — External document upload API uses per-tenant API keys (SHA-256 hashed, `fai_` prefix). Tenant is derived from the key so callers cannot upload to other tenants.
+- **Admin key protection** — API key generation requires the `X-Admin-Key` header matching `ADMIN_SECRET_KEY`
 
 ---
 

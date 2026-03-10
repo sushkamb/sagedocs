@@ -42,28 +42,42 @@ SSH into the instance and install system dependencies:
 
 ```bash
 sudo apt update && sudo apt upgrade -y
-sudo apt install -y python3.11 python3.11-venv python3.11-dev \
+sudo apt install -y python3 python3-venv python3-dev \
     build-essential apache2 certbot python3-certbot-apache git
 ```
 
 ## Step 4: Deploy App Code
 
+The repo is cloned at `/home/ubuntu/ForteAIBot`. Use the deploy script to sync it to the deployment directory:
+
 ```bash
-# Create app directory
+# First-time deploy: creates venv, data dirs, syncs code, installs deps
+sudo bash /home/ubuntu/ForteAIBot/scripts/deploy.sh
+```
+
+The script uses `rsync` to copy code from `/home/ubuntu/ForteAIBot` to `/var/www/forteaibot`, preserving `.env`, `venv/`, `data/`, and `uploads/` in the deploy directory.
+
+For subsequent deploys after code changes:
+
+```bash
+# Code-only update: syncs code, updates deps, restarts service (skips venv/dir setup)
+sudo bash /home/ubuntu/ForteAIBot/scripts/deploy.sh --update
+```
+
+<details>
+<summary>Manual setup (alternative)</summary>
+
+```bash
 sudo mkdir -p /var/www/forteaibot
 sudo chown $USER:$USER /var/www/forteaibot
-
-# Clone or upload your code
 cd /var/www/forteaibot
 git clone <your-repo-url> .
-# OR use scp/sftp to upload files
-
-# Create virtual environment and install dependencies
-python3.11 -m venv venv
+python3 -m venv venv
 source venv/bin/activate
 cd backend
 pip install -r requirements.txt
 ```
+</details>
 
 ## Step 5: Configure Environment
 
@@ -246,9 +260,8 @@ sudo systemctl status forteaibot
 ### Updating the App
 
 ```bash
-cd /var/www/forteaibot
-sudo -u www-data git pull
-sudo systemctl restart forteaibot
+# Pull latest in the git clone, sync to deploy dir, restart service
+sudo bash /home/ubuntu/ForteAIBot/scripts/deploy.sh --update
 ```
 
 ### Files Created on Server

@@ -49,6 +49,7 @@ class TenantConfig(BaseModel):
     help_temperature: Optional[float] = None
     data_temperature: Optional[float] = None
     rag_top_k: Optional[int] = None
+    api_key_hash: Optional[str] = None
 
 
 class AnalyticsEntry(BaseModel):

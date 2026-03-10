@@ -171,7 +171,62 @@ Expected: A response with the answer pulled from the uploaded document, with sou
 
 ---
 
-## 4. Testing the Widget
+## 4. Testing the External Document Upload API
+
+The external API allows external services to upload documents using per-tenant API keys.
+
+### 4.1 Generate an API Key
+
+```bash
+curl -X POST http://localhost:8500/api/tenants/chirocloud/api-key \
+  -H "X-Admin-Key: change-this-to-a-random-string"
+```
+
+Response (save the `api_key` — it cannot be retrieved again):
+
+```json
+{
+  "tenant_id": "chirocloud",
+  "api_key": "fai_abc123...",
+  "message": "Save this key now — it cannot be retrieved again."
+}
+```
+
+### 4.2 Upload a Document with the API Key
+
+```bash
+curl -X POST http://localhost:8500/api/v1/documents/upload \
+  -H "X-API-Key: fai_abc123..." \
+  -F "file=@/tmp/test-help.md" \
+  -F "title=External Upload Test"
+```
+
+Expected response:
+
+```json
+{
+  "success": true,
+  "message": "Document 'External Upload Test' indexed successfully",
+  "filename": "test-help.md",
+  "chunk_count": 3
+}
+```
+
+### 4.3 Verify Authentication
+
+Bad or missing API key should return 401:
+
+```bash
+curl -X POST http://localhost:8500/api/v1/documents/upload \
+  -H "X-API-Key: bad_key" \
+  -F "file=@/tmp/test-help.md" \
+  -F "title=Should Fail"
+# → {"detail": "Invalid API key"}
+```
+
+---
+
+## 5. Testing the Widget
 
 ### 4.1 Create a Test HTML Page
 
@@ -200,11 +255,11 @@ Open this file in a browser. You should see a blue chat bubble in the bottom-rig
 
 ---
 
-## 5. Testing the Data Mode (Function Calling)
+## 6. Testing the Data Mode (Function Calling)
 
 Data mode requires a running host application with API endpoints. For local testing without the host app, you can verify the tool registry loads correctly:
 
-### 5.1 Verify Tool Registry
+### 6.1 Verify Tool Registry
 
 ```bash
 curl http://localhost:8500/docs
@@ -212,7 +267,7 @@ curl http://localhost:8500/docs
 
 Navigate to the `POST /api/chat/data` endpoint in Swagger. The tool registry is loaded from `backend/tools/chirocloud.yaml`.
 
-### 5.2 Mock Testing
+### 6.2 Mock Testing
 
 To test data mode end-to-end without ChiroCloud running, you can temporarily modify `chirocloud.yaml` to point `base_url` to a mock API:
 
@@ -254,7 +309,7 @@ curl -X POST http://localhost:8500/api/chat/data \
 
 ---
 
-## 6. API Testing with Swagger
+## 7. API Testing with Swagger
 
 FastAPI auto-generates interactive API documentation:
 
@@ -265,16 +320,16 @@ You can test all endpoints directly from the Swagger UI without needing curl.
 
 ---
 
-## 7. Running with Docker
+## 8. Running with Docker
 
-### 7.1 Build the Image
+### 8.1 Build the Image
 
 ```bash
 cd backend
 docker build -t forteai .
 ```
 
-### 7.2 Run the Container
+### 8.2 Run the Container
 
 ```bash
 docker run -d \
@@ -287,14 +342,14 @@ docker run -d \
 
 The `-v forteai-data:/app/data` flag persists ChromaDB data and tenant configs across container restarts.
 
-### 7.3 Verify
+### 8.3 Verify
 
 ```bash
 curl http://localhost:8500/health
 # {"status":"healthy"}
 ```
 
-### 7.4 View Logs
+### 8.4 View Logs
 
 ```bash
 docker logs -f forteai
@@ -302,9 +357,9 @@ docker logs -f forteai
 
 ---
 
-## 8. Deploying to AWS EC2
+## 9. Deploying to AWS EC2
 
-### 8.1 Prepare the Server
+### 9.1 Prepare the Server
 
 ```bash
 # Install Docker on Amazon Linux 2
@@ -314,7 +369,7 @@ sudo service docker start
 sudo usermod -aG docker ec2-user
 ```
 
-### 8.2 Deploy
+### 9.2 Deploy
 
 ```bash
 # Transfer the code to the server (or pull from git)
@@ -337,18 +392,19 @@ docker run -d \
   forteai
 ```
 
-### 8.3 Security Checklist
+### 9.3 Security Checklist
 
 - [ ] Set `CORS_ORIGINS` to only your app's domain(s)
-- [ ] Set a strong `ADMIN_SECRET_KEY`
+- [ ] Set a strong `ADMIN_SECRET_KEY` (protects API key generation)
 - [ ] Use HTTPS (put behind an ALB or nginx with SSL)
 - [ ] Keep API keys in `.env` only (never commit to git)
+- [ ] Store tenant API keys securely — they are shown only once at generation time
 - [ ] Restrict EC2 security group: port 8500 accessible only from your app servers or load balancer
 - [ ] Set up CloudWatch or similar for monitoring
 
 ---
 
-## 9. Troubleshooting
+## 10. Troubleshooting
 
 ### Server won't start
 
@@ -392,7 +448,7 @@ Common cause: missing `.env` file or invalid API key.
 
 ---
 
-## 10. Development Workflow
+## 11. Development Workflow
 
 ### Adding Help Content
 
@@ -426,6 +482,7 @@ Common cause: missing `.env` file or invalid API key.
 ### Adding a New Tenant (Application)
 
 1. Create a tenant config: `POST /api/tenants/create`
-2. Upload documentation for that tenant
-3. (Optional) Create a tool registry YAML in `backend/tools/{tenant_id}.yaml`
-4. Embed the widget in the new app with the tenant ID
+2. (Optional) Generate an API key for external uploads: `POST /api/tenants/{id}/api-key` with `X-Admin-Key` header
+3. Upload documentation for that tenant (via admin dashboard or external API)
+4. (Optional) Create a tool registry YAML in `backend/tools/{tenant_id}.yaml`
+5. Embed the widget in the new app with the tenant ID

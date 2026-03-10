@@ -1,7 +1,11 @@
+import hashlib
 import json
 import os
-from fastapi import APIRouter, HTTPException
+import secrets
 
+from fastapi import APIRouter, Header, HTTPException
+
+from app.config import settings
 from app.models.schemas import TenantConfig
 
 router = APIRouter(prefix="/api/tenants", tags=["Tenants"])
@@ -32,6 +36,32 @@ async def get_tenant(tenant_id: str):
     with open(path, "r") as f:
         data = json.load(f)
     return TenantConfig(**data)
+
+
+@router.post("/{tenant_id}/api-key")
+async def generate_api_key(tenant_id: str, x_admin_key: str = Header(...)):
+    """Generate an API key for a tenant. Protected by admin secret key."""
+    if x_admin_key != settings.admin_secret_key:
+        raise HTTPException(status_code=403, detail="Invalid admin key")
+
+    path = _get_tenant_path(tenant_id)
+    if not os.path.exists(path):
+        raise HTTPException(status_code=404, detail=f"Tenant '{tenant_id}' not found")
+
+    api_key = f"fai_{secrets.token_urlsafe(32)}"
+    key_hash = hashlib.sha256(api_key.encode()).hexdigest()
+
+    with open(path, "r") as f:
+        data = json.load(f)
+    data["api_key_hash"] = key_hash
+    with open(path, "w") as f:
+        json.dump(data, f, indent=2)
+
+    return {
+        "tenant_id": tenant_id,
+        "api_key": api_key,
+        "message": "Save this key now — it cannot be retrieved again.",
+    }
 
 
 @router.get("/")

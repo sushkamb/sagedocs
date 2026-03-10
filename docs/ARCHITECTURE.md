@@ -83,10 +83,12 @@ forteaibot/
 │   │   ├── config.py                # Pydantic settings (reads .env)
 │   │   ├── models/
 │   │   │   └── schemas.py           # Request/response Pydantic models
+│   │   ├── auth.py                    # API key verification dependency
 │   │   ├── routers/
 │   │   │   ├── chat.py              # POST /api/chat/* — main chat logic
 │   │   │   ├── documents.py         # Document upload/list/delete
-│   │   │   ├── tenants.py           # Tenant CRUD
+│   │   │   ├── external.py          # External API (authenticated uploads)
+│   │   │   ├── tenants.py           # Tenant CRUD + API key generation
 │   │   │   └── analytics.py         # Usage logging & summaries
 │   │   ├── services/
 │   │   │   ├── rag_engine.py        # ChromaDB + RAG pipeline
@@ -338,9 +340,17 @@ There are also dedicated endpoints:
 
 | Endpoint | Method | Purpose |
 |---|---|---|
-| `/api/documents/upload` | POST | Upload file, chunk, embed, index |
+| `/api/documents/upload` | POST | Upload file, chunk, embed, index (admin/internal) |
 | `/api/documents/list` | GET | List indexed docs for a tenant |
 | `/api/documents/delete` | DELETE | Remove document from index |
+
+### External API Endpoints
+
+| Endpoint | Method | Auth | Purpose |
+|---|---|---|---|
+| `/api/v1/documents/upload` | POST | `X-API-Key` header | Authenticated document upload for external services |
+
+The tenant is derived from the API key — callers cannot upload to a different tenant. See [External Document Upload API](#external-document-upload-api) below for details.
 
 ### Tenant Endpoints
 
@@ -348,6 +358,7 @@ There are also dedicated endpoints:
 |---|---|---|
 | `/api/tenants/create` | POST | Create or update tenant config |
 | `/api/tenants/{id}` | GET | Get tenant config |
+| `/api/tenants/{id}/api-key` | POST | Generate API key (requires `X-Admin-Key` header) |
 | `/api/tenants/` | GET | List all tenants |
 
 **Tenant config includes:** welcome message, placeholder text, starter questions, widget colors, logo URL, position (bottom-right/bottom-left), LLM model override, help/data mode toggles.
@@ -518,6 +529,32 @@ ADMIN_SECRET_KEY=your-random-string
 
 ## 14. Security Model
 
+### External Document Upload API
+
+ForteAI provides an authenticated external API (`POST /api/v1/documents/upload`) that allows external services to programmatically upload documents. Authentication uses per-tenant API keys.
+
+**Generating an API key:**
+
+```bash
+curl -X POST http://localhost:8500/api/tenants/chirocloud/api-key \
+  -H "X-Admin-Key: <admin_secret_key>"
+# → { "tenant_id": "chirocloud", "api_key": "fai_...", "message": "Save this key now..." }
+```
+
+The plaintext key is returned **once** — it cannot be retrieved again. Only the SHA-256 hash is stored in the tenant config.
+
+**Uploading a document:**
+
+```bash
+curl -X POST http://localhost:8500/api/v1/documents/upload \
+  -H "X-API-Key: fai_<generated_key>" \
+  -F "file=@document.pdf" \
+  -F "title=My Document"
+# → { "success": true, "message": "...", "filename": "document.pdf", "chunk_count": 12 }
+```
+
+The tenant is derived from the API key — callers cannot upload to a different tenant.
+
 ### No Direct Database Access
 
 The LLM **never generates SQL** and **never touches a database**. It can only call pre-defined API endpoints listed in the YAML tool registry. This eliminates an entire class of injection attacks.
@@ -535,6 +572,16 @@ Widget → ForteAI → Host App API
 ### Read-Only Endpoints
 
 All host app endpoints under `/api/assistant/*` are strictly GET/read-only. The LLM cannot modify data.
+
+### API Key Authentication
+
+The external document upload API uses per-tenant API keys:
+
+- Keys are generated via `POST /api/tenants/{id}/api-key`, protected by the admin secret key
+- Keys use a `fai_` prefix followed by a `secrets.token_urlsafe(32)` token
+- Only the SHA-256 hash of the key is stored in the tenant JSON config
+- The plaintext key is returned once at generation time and cannot be retrieved
+- On each request, the provided key is hashed and compared against all tenant configs to identify the tenant
 
 ### CORS Control
 
@@ -642,10 +689,12 @@ To connect ForteAI to a new host application:
 |---|---|
 | `backend/app/main.py` | FastAPI app initialization, CORS, static mounts, root health check |
 | `backend/app/config.py` | Pydantic `Settings` class, reads `.env` |
+| `backend/app/auth.py` | API key verification dependency for external endpoints |
 | `backend/app/models/schemas.py` | `ChatRequest`, `ChatResponse`, `TenantConfig`, etc. |
 | `backend/app/routers/chat.py` | Chat endpoints: `/`, `/help`, `/data` with auto-routing logic |
-| `backend/app/routers/documents.py` | Upload, list, delete documents |
-| `backend/app/routers/tenants.py` | Tenant CRUD endpoints |
+| `backend/app/routers/documents.py` | Upload, list, delete documents + shared `process_upload()` |
+| `backend/app/routers/external.py` | External API: authenticated document upload via API key |
+| `backend/app/routers/tenants.py` | Tenant CRUD + API key generation endpoints |
 | `backend/app/routers/analytics.py` | Question logging and summary stats |
 | `backend/app/services/rag_engine.py` | ChromaDB management, embedding, semantic search, answer generation |
 | `backend/app/services/query_engine.py` | YAML loading, LLM function calling, API execution |

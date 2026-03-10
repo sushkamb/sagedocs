@@ -4,7 +4,7 @@ from fastapi.staticfiles import StaticFiles
 import os
 
 from app.config import settings
-from app.routers import chat, documents, tenants, analytics
+from app.routers import chat, documents, tenants, analytics, external
 
 app = FastAPI(
     title="ForteAI Bot",
@@ -27,6 +27,7 @@ app.include_router(chat.router)
 app.include_router(documents.router)
 app.include_router(tenants.router)
 app.include_router(analytics.router)
+app.include_router(external.router)
 
 # Serve extracted document images
 images_dir = os.path.join(os.path.dirname(__file__), "..", "data", "images")
