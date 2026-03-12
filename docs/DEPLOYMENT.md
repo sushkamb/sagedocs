@@ -104,8 +104,11 @@ PORT=8100
 # CORS — comma-separated allowed origins
 CORS_ORIGINS=https://aichatbot.ignitx.solutions,https://your-host-app.com
 
-# Admin dashboard secret key
+# Admin
 ADMIN_SECRET_KEY=<generate-a-random-secret>
+ADMIN_USERNAME=admin
+ADMIN_PASSWORD=<strong-admin-password>
+JWT_SECRET=<generate-a-random-jwt-secret>
 ```
 
 > **Important:** Set `HOST=127.0.0.1` (not `0.0.0.0`) so uvicorn only accepts local connections. Apache handles all external traffic.

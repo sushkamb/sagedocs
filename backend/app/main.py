@@ -4,7 +4,7 @@ from fastapi.staticfiles import StaticFiles
 import os
 
 from app.config import settings
-from app.routers import chat, documents, tenants, analytics, external
+from app.routers import admin_auth, chat, documents, tenants, analytics, external
 
 app = FastAPI(
     title="ForteAI Bot",
@@ -23,6 +23,7 @@ app.add_middleware(
 )
 
 # Routers
+app.include_router(admin_auth.router)
 app.include_router(chat.router)
 app.include_router(documents.router)
 app.include_router(tenants.router)

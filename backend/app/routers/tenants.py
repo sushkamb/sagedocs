@@ -3,10 +3,10 @@ import json
 import os
 import secrets
 
-from fastapi import APIRouter, Header, HTTPException
+from fastapi import APIRouter, Depends, HTTPException
 
-from app.config import settings
 from app.models.schemas import TenantConfig
+from app.routers.admin_auth import verify_admin_token
 
 router = APIRouter(prefix="/api/tenants", tags=["Tenants"])
 
@@ -18,7 +18,7 @@ def _get_tenant_path(tenant_id: str) -> str:
     return os.path.join(TENANTS_DIR, f"{tenant_id}.json")
 
 
-@router.post("/create")
+@router.post("/create", dependencies=[Depends(verify_admin_token)])
 async def create_tenant(config: TenantConfig):
     """Create or update a tenant configuration."""
     path = _get_tenant_path(config.tenant_id)
@@ -29,7 +29,7 @@ async def create_tenant(config: TenantConfig):
 
 @router.get("/{tenant_id}", response_model=TenantConfig)
 async def get_tenant(tenant_id: str):
-    """Get tenant configuration."""
+    """Get tenant configuration. Public — used by the widget."""
     path = _get_tenant_path(tenant_id)
     if not os.path.exists(path):
         raise HTTPException(status_code=404, detail=f"Tenant '{tenant_id}' not found")
@@ -38,11 +38,9 @@ async def get_tenant(tenant_id: str):
     return TenantConfig(**data)
 
 
-@router.post("/{tenant_id}/api-key")
-async def generate_api_key(tenant_id: str, x_admin_key: str = Header(...)):
-    """Generate an API key for a tenant. Protected by admin secret key."""
-    if x_admin_key != settings.admin_secret_key:
-        raise HTTPException(status_code=403, detail="Invalid admin key")
+@router.post("/{tenant_id}/api-key", dependencies=[Depends(verify_admin_token)])
+async def generate_api_key(tenant_id: str):
+    """Generate an API key for a tenant. Protected by admin JWT auth."""
 
     path = _get_tenant_path(tenant_id)
     if not os.path.exists(path):
@@ -64,7 +62,7 @@ async def generate_api_key(tenant_id: str, x_admin_key: str = Header(...)):
     }
 
 
-@router.get("/")
+@router.get("/", dependencies=[Depends(verify_admin_token)])
 async def list_tenants():
     """List all configured tenants."""
     tenants = []

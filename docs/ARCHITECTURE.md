@@ -83,13 +83,14 @@ forteaibot/
 │   │   ├── config.py                # Pydantic settings (reads .env)
 │   │   ├── models/
 │   │   │   └── schemas.py           # Request/response Pydantic models
-│   │   ├── auth.py                    # API key verification dependency
+│   │   ├── auth.py                    # API key verification dependency (external API)
 │   │   ├── routers/
+│   │   │   ├── admin_auth.py        # Admin JWT login/verify + verify_admin_token dependency
 │   │   │   ├── chat.py              # POST /api/chat/* — main chat logic
-│   │   │   ├── documents.py         # Document upload/list/delete
-│   │   │   ├── external.py          # External API (authenticated uploads)
-│   │   │   ├── tenants.py           # Tenant CRUD + API key generation
-│   │   │   └── analytics.py         # Usage logging & summaries
+│   │   │   ├── documents.py         # Document upload/list/delete (admin JWT protected)
+│   │   │   ├── external.py          # External API (authenticated uploads via API key)
+│   │   │   ├── tenants.py           # Tenant CRUD + API key generation (admin JWT protected)
+│   │   │   └── analytics.py         # Usage logging & summaries (admin JWT protected)
 │   │   ├── services/
 │   │   │   ├── rag_engine.py        # ChromaDB + RAG pipeline
 │   │   │   ├── query_engine.py      # Function calling engine
@@ -106,6 +107,7 @@ forteaibot/
 │   └── forteai-widget.css           # Widget styles
 ├── admin/
 │   ├── index.html                   # Admin dashboard (single-page)
+│   ├── login.html                   # Admin login page
 │   └── test-widget.html             # Widget test page
 ├── docs/
 │   ├── DESIGN.md                    # Design document & roadmap
@@ -336,7 +338,34 @@ There are also dedicated endpoints:
 }
 ```
 
+### Admin Auth Endpoints
+
+| Endpoint | Method | Auth | Purpose |
+|---|---|---|---|
+| `/api/admin/login` | POST | None | Login with username/password, returns JWT token |
+| `/api/admin/verify` | GET | Bearer token | Check if current token is still valid |
+
+**Login request:**
+
+```json
+{
+  "username": "admin",
+  "password": "your-password"
+}
+```
+
+**Login response:**
+
+```json
+{
+  "token": "eyJ...",
+  "expires_in": 86400
+}
+```
+
 ### Document Endpoints
+
+All document endpoints require `Authorization: Bearer <token>` header (obtained from `/api/admin/login`).
 
 | Endpoint | Method | Purpose |
 |---|---|---|
@@ -354,16 +383,20 @@ The tenant is derived from the API key — callers cannot upload to a different 
 
 ### Tenant Endpoints
 
-| Endpoint | Method | Purpose |
-|---|---|---|
-| `/api/tenants/create` | POST | Create or update tenant config |
-| `/api/tenants/{id}` | GET | Get tenant config |
-| `/api/tenants/{id}/api-key` | POST | Generate API key (requires `X-Admin-Key` header) |
-| `/api/tenants/` | GET | List all tenants |
+All write endpoints require `Authorization: Bearer <token>` header. `GET /api/tenants/{id}` is public (used by the widget).
+
+| Endpoint | Method | Auth | Purpose |
+|---|---|---|---|
+| `/api/tenants/create` | POST | Bearer token | Create or update tenant config |
+| `/api/tenants/{id}` | GET | None (public) | Get tenant config |
+| `/api/tenants/{id}/api-key` | POST | Bearer token | Generate API key for external uploads |
+| `/api/tenants/` | GET | Bearer token | List all tenants |
 
 **Tenant config includes:** welcome message, placeholder text, starter questions, widget colors, logo URL, position (bottom-right/bottom-left), LLM model override, help/data mode toggles.
 
 ### Analytics Endpoints
+
+All analytics endpoints require `Authorization: Bearer <token>` header.
 
 | Endpoint | Method | Purpose |
 |---|---|---|
@@ -513,7 +546,10 @@ PORT=8500
 CORS_ORIGINS=http://localhost,https://chirocloud.com
 
 # Admin
-ADMIN_SECRET_KEY=your-random-string
+ADMIN_SECRET_KEY=your-random-string    # Protects external API key generation
+ADMIN_USERNAME=admin                   # Admin dashboard login username
+ADMIN_PASSWORD=change-this-password    # Admin dashboard login password
+JWT_SECRET=change-this-jwt-secret      # Secret for signing admin JWT tokens
 ```
 
 ### Static Mounts
@@ -535,9 +571,20 @@ ForteAI provides an authenticated external API (`POST /api/v1/documents/upload`)
 
 **Generating an API key:**
 
+First, obtain a JWT token by logging in:
+
+```bash
+curl -X POST http://localhost:8500/api/admin/login \
+  -H "Content-Type: application/json" \
+  -d '{"username": "admin", "password": "your-password"}'
+# → { "token": "eyJ...", "expires_in": 86400 }
+```
+
+Then use the token to generate an API key:
+
 ```bash
 curl -X POST http://localhost:8500/api/tenants/chirocloud/api-key \
-  -H "X-Admin-Key: <admin_secret_key>"
+  -H "Authorization: Bearer <jwt_token>"
 # → { "tenant_id": "chirocloud", "api_key": "fai_...", "message": "Save this key now..." }
 ```
 
@@ -577,7 +624,7 @@ All host app endpoints under `/api/assistant/*` are strictly GET/read-only. The 
 
 The external document upload API uses per-tenant API keys:
 
-- Keys are generated via `POST /api/tenants/{id}/api-key`, protected by the admin secret key
+- Keys are generated via `POST /api/tenants/{id}/api-key`, protected by admin JWT authentication
 - Keys use a `fai_` prefix followed by a `secrets.token_urlsafe(32)` token
 - Only the SHA-256 hash of the key is stored in the tenant JSON config
 - The plaintext key is returned once at generation time and cannot be retrieved
@@ -691,11 +738,12 @@ To connect ForteAI to a new host application:
 | `backend/app/config.py` | Pydantic `Settings` class, reads `.env` |
 | `backend/app/auth.py` | API key verification dependency for external endpoints |
 | `backend/app/models/schemas.py` | `ChatRequest`, `ChatResponse`, `TenantConfig`, etc. |
+| `backend/app/routers/admin_auth.py` | Admin JWT login/verify endpoints + `verify_admin_token` dependency |
 | `backend/app/routers/chat.py` | Chat endpoints: `/`, `/help`, `/data` with auto-routing logic |
-| `backend/app/routers/documents.py` | Upload, list, delete documents + shared `process_upload()` |
+| `backend/app/routers/documents.py` | Upload, list, delete documents + shared `process_upload()` (admin JWT protected) |
 | `backend/app/routers/external.py` | External API: authenticated document upload via API key |
-| `backend/app/routers/tenants.py` | Tenant CRUD + API key generation endpoints |
-| `backend/app/routers/analytics.py` | Question logging and summary stats |
+| `backend/app/routers/tenants.py` | Tenant CRUD + API key generation endpoints (admin JWT protected) |
+| `backend/app/routers/analytics.py` | Question logging and summary stats (admin JWT protected) |
 | `backend/app/services/rag_engine.py` | ChromaDB management, embedding, semantic search, answer generation |
 | `backend/app/services/query_engine.py` | YAML loading, LLM function calling, API execution |
 | `backend/app/services/llm_service.py` | OpenAI/Anthropic abstraction, chat, embeddings, vision |
@@ -705,4 +753,5 @@ To connect ForteAI to a new host application:
 | `widget/forteai-widget.js` | Embeddable chat widget with FAB, chat panel, markdown rendering |
 | `widget/forteai-widget.css` | Widget styles, responsive layout, light/dark themes |
 | `admin/index.html` | Admin dashboard: docs, test chat, analytics, settings |
+| `admin/login.html` | Admin login page (username/password → JWT token) |
 | `admin/test-widget.html` | Standalone widget test page |

@@ -112,8 +112,10 @@ forteaibot/
 │   │   ├── config.py               # Settings (from .env)
 │   │   ├── models/schemas.py       # Pydantic request/response models
 │   │   ├── routers/
+│   │   │   ├── admin_auth.py       # Admin JWT login/verify
 │   │   │   ├── chat.py             # POST /api/chat — main chat endpoint
 │   │   │   ├── documents.py        # Document upload, list, delete
+│   │   │   ├── external.py         # External API (API key auth)
 │   │   │   ├── tenants.py          # Tenant configuration CRUD
 │   │   │   └── analytics.py        # Usage tracking and content gaps
 │   │   ├── services/
@@ -131,9 +133,12 @@ forteaibot/
 │   ├── forteai-widget.js           # Embeddable chat widget
 │   └── forteai-widget.css          # Widget styles
 ├── admin/
-│   └── index.html                  # Admin dashboard
+│   ├── index.html                  # Admin dashboard
+│   └── login.html                  # Admin login page
 ├── docs/
-│   ├── DESIGN.md                   # Full architecture and design document
+│   ├── ARCHITECTURE.md             # Full architecture reference
+│   ├── DESIGN.md                   # Design document and roadmap
+│   ├── DEPLOYMENT.md               # AWS Lightsail deployment guide
 │   └── BUILD_AND_TEST.md           # Build and test guide
 ├── .env.example                    # Environment variable template
 ├── .gitignore
@@ -152,20 +157,36 @@ Help Mode uses only the ForteAI tenant (all clinics share the same docs). Data M
 
 ## API Endpoints
 
+### Public
+
 | Endpoint | Method | Description |
 |---|---|---|
 | `/api/chat/` | POST | Main chat — auto-routes between help and data mode |
 | `/api/chat/help` | POST | Help mode only — answers from documentation |
 | `/api/chat/data` | POST | Data mode only — queries host app API |
+| `/api/tenants/{id}` | GET | Get tenant configuration (used by widget) |
+| `/health` | GET | Health check |
+
+### Admin (requires Bearer token from `/api/admin/login`)
+
+| Endpoint | Method | Description |
+|---|---|---|
+| `/api/admin/login` | POST | Login with username/password, returns JWT token |
+| `/api/admin/verify` | GET | Check if current token is valid |
 | `/api/documents/upload` | POST | Upload and index a document |
 | `/api/documents/list` | GET | List indexed documents for a tenant |
 | `/api/documents/delete` | DELETE | Remove a document from the index |
 | `/api/tenants/create` | POST | Create/update tenant configuration |
-| `/api/tenants/{id}` | GET | Get tenant configuration |
 | `/api/tenants/` | GET | List all tenants |
+| `/api/tenants/{id}/api-key` | POST | Generate API key for external uploads |
 | `/api/analytics/summary` | GET | Question counts (total, answered, unanswered) |
 | `/api/analytics/questions` | GET | List logged questions (filterable) |
-| `/health` | GET | Health check |
+
+### External API (requires `X-API-Key` header)
+
+| Endpoint | Method | Description |
+|---|---|---|
+| `/api/v1/documents/upload` | POST | Upload document using per-tenant API key |
 
 ## Adding a New Host Application
 
@@ -190,6 +211,10 @@ All settings are controlled via environment variables (`.env` file). See `.env.e
 | `CHROMA_PERSIST_DIR` | `./data/chroma` | ChromaDB storage location |
 | `PORT` | `8500` | Server port |
 | `CORS_ORIGINS` | `http://localhost` | Allowed CORS origins (comma-separated) |
+| `ADMIN_USERNAME` | `admin` | Admin dashboard login username |
+| `ADMIN_PASSWORD` | — | Admin dashboard login password |
+| `JWT_SECRET` | — | Secret for signing admin JWT tokens |
+| `ADMIN_SECRET_KEY` | — | Legacy key for external API key generation |
 
 ## Docker
 
@@ -201,8 +226,10 @@ docker run -p 8500:8500 --env-file ../.env forteai
 
 ## Documentation
 
-- [Design Document](docs/DESIGN.md) — Full architecture, security model, and rollout plan
+- [Architecture](docs/ARCHITECTURE.md) — Full architecture reference
+- [Design Document](docs/DESIGN.md) — Design document and rollout plan
 - [Build and Test Guide](docs/BUILD_AND_TEST.md) — Detailed setup, testing, and deployment instructions
+- [Deployment Guide](docs/DEPLOYMENT.md) — AWS Lightsail deployment guide
 
 ## License
 

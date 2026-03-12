@@ -81,9 +81,12 @@ INFO:     Started reloader process
 
 ### 3.1 Create a Tenant
 
+Use the admin JWT token obtained from `/api/admin/login` (see section 3.2 for login steps):
+
 ```bash
 curl -X POST http://localhost:8500/api/tenants/create \
   -H "Content-Type: application/json" \
+  -H "Authorization: Bearer YOUR_TOKEN" \
   -d '{
     "tenant_id": "chirocloud",
     "display_name": "ChiroCloud",
@@ -130,10 +133,20 @@ cat > /tmp/test-help.md << 'EOF'
 EOF
 ```
 
-Upload it:
+First, obtain an admin JWT token:
+
+```bash
+curl -X POST http://localhost:8500/api/admin/login \
+  -H "Content-Type: application/json" \
+  -d '{"username": "admin", "password": "change-this-password"}'
+# → { "token": "eyJ...", "expires_in": 86400 }
+```
+
+Upload it (replace `YOUR_TOKEN` with the token from the login response):
 
 ```bash
 curl -X POST http://localhost:8500/api/documents/upload \
+  -H "Authorization: Bearer YOUR_TOKEN" \
   -F "file=@/tmp/test-help.md" \
   -F "tenant=chirocloud" \
   -F "title=Getting Started Guide"
@@ -177,9 +190,11 @@ The external API allows external services to upload documents using per-tenant A
 
 ### 4.1 Generate an API Key
 
+Use the admin JWT token obtained from `/api/admin/login`:
+
 ```bash
 curl -X POST http://localhost:8500/api/tenants/chirocloud/api-key \
-  -H "X-Admin-Key: change-this-to-a-random-string"
+  -H "Authorization: Bearer YOUR_TOKEN"
 ```
 
 Response (save the `api_key` — it cannot be retrieved again):
@@ -395,7 +410,8 @@ docker run -d \
 ### 9.3 Security Checklist
 
 - [ ] Set `CORS_ORIGINS` to only your app's domain(s)
-- [ ] Set a strong `ADMIN_SECRET_KEY` (protects API key generation)
+- [ ] Set a strong `ADMIN_SECRET_KEY` (protects external API key generation)
+- [ ] Set a strong `ADMIN_PASSWORD` and `JWT_SECRET` (protects admin dashboard)
 - [ ] Use HTTPS (put behind an ALB or nginx with SSL)
 - [ ] Keep API keys in `.env` only (never commit to git)
 - [ ] Store tenant API keys securely — they are shown only once at generation time
@@ -482,7 +498,7 @@ Common cause: missing `.env` file or invalid API key.
 ### Adding a New Tenant (Application)
 
 1. Create a tenant config: `POST /api/tenants/create`
-2. (Optional) Generate an API key for external uploads: `POST /api/tenants/{id}/api-key` with `X-Admin-Key` header
+2. (Optional) Generate an API key for external uploads: `POST /api/tenants/{id}/api-key` with admin Bearer token
 3. Upload documentation for that tenant (via admin dashboard or external API)
 4. (Optional) Create a tool registry YAML in `backend/tools/{tenant_id}.yaml`
 5. Embed the widget in the new app with the tenant ID

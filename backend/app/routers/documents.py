@@ -1,10 +1,11 @@
 import os
 import shutil
-from fastapi import APIRouter, UploadFile, File, Form, HTTPException
+from fastapi import APIRouter, Depends, UploadFile, File, Form, HTTPException
 
 from app.services.rag_engine import RAGEngine
+from app.routers.admin_auth import verify_admin_token
 
-router = APIRouter(prefix="/api/documents", tags=["Documents"])
+router = APIRouter(prefix="/api/documents", tags=["Documents"], dependencies=[Depends(verify_admin_token)])
 
 rag_engine = RAGEngine()
 

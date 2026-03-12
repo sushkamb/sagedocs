@@ -34,6 +34,9 @@ class Settings(BaseSettings):
 
     # Admin
     admin_secret_key: str = "change-this-to-a-random-string"
+    admin_username: str = "admin"
+    admin_password: str = "change-this-password"
+    jwt_secret: str = "change-this-jwt-secret"
 
     class Config:
         env_file = ".env"

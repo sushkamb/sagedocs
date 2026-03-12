@@ -1,9 +1,11 @@
 import json
 import os
 from datetime import datetime
-from fastapi import APIRouter
+from fastapi import APIRouter, Depends
 
-router = APIRouter(prefix="/api/analytics", tags=["Analytics"])
+from app.routers.admin_auth import verify_admin_token
+
+router = APIRouter(prefix="/api/analytics", tags=["Analytics"], dependencies=[Depends(verify_admin_token)])
 
 ANALYTICS_DIR = os.path.join(os.path.dirname(__file__), "..", "..", "data", "analytics")
 os.makedirs(ANALYTICS_DIR, exist_ok=True)

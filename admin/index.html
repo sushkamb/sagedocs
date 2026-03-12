@@ -60,6 +60,12 @@
                 <span id="themeLabel">Dark Mode</span>
             </button>
         </div>
+        <div style="padding:0 12px 8px;">
+            <button class="nav-item" id="logoutBtn" style="justify-content:center; gap:8px; color:#ef4444;">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
+                Logout
+            </button>
+        </div>
         <div class="sidebar-footer">ForteAI v0.1.0</div>
     </aside>
 
@@ -285,6 +291,43 @@
         });
 
         var API_BASE = window.location.origin;
+        var ADMIN_TOKEN = sessionStorage.getItem("forteai_admin_token");
+
+        // ═══ AUTH CHECK ═══
+        if (!ADMIN_TOKEN) {
+            window.location.href = "/admin/login.html";
+        } else {
+            fetch(API_BASE + "/api/admin/verify", {
+                headers: { "Authorization": "Bearer " + ADMIN_TOKEN }
+            }).then(function (r) {
+                if (!r.ok) {
+                    sessionStorage.removeItem("forteai_admin_token");
+                    window.location.href = "/admin/login.html";
+                }
+            }).catch(function () {
+                sessionStorage.removeItem("forteai_admin_token");
+                window.location.href = "/admin/login.html";
+            });
+        }
+
+        function authHeaders(extra) {
+            var h = { "Authorization": "Bearer " + ADMIN_TOKEN };
+            if (extra) { for (var k in extra) h[k] = extra[k]; }
+            return h;
+        }
+
+        function authFetch(url, opts) {
+            opts = opts || {};
+            opts.headers = authHeaders(opts.headers);
+            return fetch(url, opts).then(function (r) {
+                if (r.status === 401) {
+                    sessionStorage.removeItem("forteai_admin_token");
+                    window.location.href = "/admin/login.html";
+                }
+                return r;
+            });
+        }
+
         var currentTenant = "";
 
         var pageTitles = {
@@ -292,6 +335,12 @@
             test: { title: "Test Chat", subtitle: "Test your AI assistant responses" },
             analytics: { title: "Analytics", subtitle: "Track question coverage and content gaps" }
         };
+
+        // ═══ LOGOUT ═══
+        document.getElementById("logoutBtn").addEventListener("click", function () {
+            sessionStorage.removeItem("forteai_admin_token");
+            window.location.href = "/admin/login.html";
+        });
 
         // ═══ NAV SWITCHING ═══
         document.querySelectorAll(".nav-item[data-tab]").forEach(function (btn) {
@@ -353,7 +402,7 @@
 
         // ═══ TENANTS ═══
         function loadTenants() {
-            return fetch(API_BASE + "/api/tenants/")
+            return authFetch(API_BASE + "/api/tenants/")
                 .then(function (r) { return r.json(); })
                 .then(function (data) {
                     var sel = document.getElementById("tenantSelect");
@@ -471,7 +520,7 @@
             btn.disabled = true;
             btn.classList.add("btn-loading");
 
-            fetch(API_BASE + "/api/tenants/create", {
+            authFetch(API_BASE + "/api/tenants/create", {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify(payload)
@@ -506,7 +555,7 @@
         }
 
         function loadDocuments() {
-            fetch(API_BASE + "/api/documents/list?tenant=" + currentTenant)
+            authFetch(API_BASE + "/api/documents/list?tenant=" + currentTenant)
                 .then(function (r) { return r.json(); })
                 .then(function (data) {
                     var list = document.getElementById("docList");
@@ -534,7 +583,7 @@
 
         function deleteDoc(filename) {
             if (!confirm("Delete " + filename + "?")) return;
-            fetch(API_BASE + "/api/documents/delete?tenant=" + currentTenant + "&filename=" + filename, { method: "DELETE" })
+            authFetch(API_BASE + "/api/documents/delete?tenant=" + currentTenant + "&filename=" + filename, { method: "DELETE" })
                 .then(function () { loadDocuments(); });
         }
 
@@ -572,7 +621,7 @@
             btn.classList.add("btn-loading");
             setUploadStatus("Uploading and indexing document. This may take a minute if it contains images...", "processing");
 
-            fetch(API_BASE + "/api/documents/upload", { method: "POST", body: fd })
+            authFetch(API_BASE + "/api/documents/upload", { method: "POST", body: fd })
                 .then(function (r) {
                     if (!r.ok) throw new Error("Upload failed (HTTP " + r.status + ")");
                     return r.json();
@@ -658,7 +707,7 @@
 
         // ═══ ANALYTICS ═══
         function loadAnalytics() {
-            fetch(API_BASE + "/api/analytics/summary?tenant=" + currentTenant)
+            authFetch(API_BASE + "/api/analytics/summary?tenant=" + currentTenant)
                 .then(function (r) { return r.json(); })
                 .then(function (data) {
                     document.getElementById("statTotal").textContent = data.total || 0;
@@ -666,7 +715,7 @@
                     document.getElementById("statUnanswered").textContent = data.unanswered || 0;
                 });
 
-            fetch(API_BASE + "/api/analytics/questions?tenant=" + currentTenant + "&unanswered_only=true")
+            authFetch(API_BASE + "/api/analytics/questions?tenant=" + currentTenant + "&unanswered_only=true")
                 .then(function (r) { return r.json(); })
                 .then(function (data) {
                     var list = document.getElementById("unansweredList");
