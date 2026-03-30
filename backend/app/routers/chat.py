@@ -1,3 +1,4 @@
+import logging
 import uuid
 from fastapi import APIRouter, HTTPException
 
@@ -5,6 +6,8 @@ from app.models.schemas import ChatRequest, ChatResponse
 from app.services.rag_engine import RAGEngine
 from app.services.query_engine import QueryEngine
 from app.routers.analytics import log_question
+
+logger = logging.getLogger(__name__)
 
 router = APIRouter(prefix="/api/chat", tags=["Chat"])
 
@@ -17,6 +20,10 @@ async def chat(request: ChatRequest):
     """Main chat endpoint — routes to help mode or data mode based on intent."""
 
     session_id = request.session_id or str(uuid.uuid4())
+    logger.info("Chat request: tenant=%s mode=%s message=%r",
+                request.tenant,
+                "unified" if (request.account_number and request.token) else "help",
+                request.message[:120])
 
     # If data mode is available (account_number + token provided), let the LLM decide
     if request.account_number and request.token:
@@ -27,6 +34,9 @@ async def chat(request: ChatRequest):
 
     answered = bool(result.get("sources")) or bool(result.get("reply"))
     log_question(request.tenant, request.message, answered)
+
+    logger.info("Chat response: answered=%s sources=%d reply_len=%d",
+                answered, len(result.get("sources", [])), len(result.get("reply", "")))
 
     return ChatResponse(
         reply=result["reply"],
@@ -112,13 +122,20 @@ async def _unified_chat(request: ChatRequest) -> dict:
     """Unified chat — tries help mode first, falls back to data mode if needed."""
 
     # Try help mode first
+    logger.info("Unified chat: trying help mode first")
     help_result = rag_engine.query(request.tenant, request.message)
 
+    has_sources = bool(help_result["sources"])
+    non_answer = _is_non_answer(help_result["reply"])
+    logger.info("Help mode result: sources=%d non_answer=%s", len(help_result.get("sources", [])), non_answer)
+
     # If help mode found relevant docs AND actually answered, return that
-    if help_result["sources"] and not _is_non_answer(help_result["reply"]):
+    if has_sources and not non_answer:
+        logger.info("Unified chat: returning help mode result")
         return help_result
 
     # Otherwise try data mode
+    logger.info("Unified chat: falling back to data mode (sources=%s, non_answer=%s)", has_sources, non_answer)
     data_result = await query_engine.query(
         tenant=request.tenant,
         question=request.message,
@@ -127,9 +144,11 @@ async def _unified_chat(request: ChatRequest) -> dict:
     )
 
     if data_result["reply"]:
+        logger.info("Unified chat: returning data mode result")
         return data_result
 
     # Neither mode could answer
+    logger.warning("Unified chat: neither mode could answer for tenant=%s", request.tenant)
     return {
         "reply": "I wasn't able to find an answer to that question. Please try rephrasing or contact support for help.",
         "sources": [],

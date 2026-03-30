@@ -1,4 +1,5 @@
 import json
+import logging
 import os
 import re
 
@@ -8,6 +9,8 @@ from chromadb.config import Settings as ChromaSettings
 from app.config import settings
 from app.services.llm_service import LLMService
 from app.services.document_processor import DocumentProcessor
+
+logger = logging.getLogger(__name__)
 
 # Pattern to extract image filenames from [Screenshot: filename | description] markers
 SCREENSHOT_PATTERN = re.compile(r"\[Screenshot:\s*(img_[a-f0-9]+\.\w+)\s*\|")
@@ -74,7 +77,10 @@ class RAGEngine:
     def ingest_document(self, file_path: str, title: str, tenant: str) -> int:
         """Process and store a document. Returns the number of chunks created."""
 
+        logger.info("Ingesting document: tenant=%s title=%r file=%s", tenant, title, file_path)
         chunks = self.doc_processor.process_file(file_path, title, tenant)
+        logger.info("Document chunked: %d chunks from %r", len(chunks), title)
+
         collection = self._get_collection(tenant)
 
         ids = [c["id"] for c in chunks]
@@ -82,6 +88,7 @@ class RAGEngine:
         metadatas = [c["metadata"] for c in chunks]
 
         # Generate embeddings
+        logger.info("Generating embeddings for %d chunks", len(chunks))
         embeddings = [self.llm.get_embedding(doc) for doc in documents]
 
         collection.add(
@@ -90,6 +97,7 @@ class RAGEngine:
             metadatas=metadatas,
             embeddings=embeddings,
         )
+        logger.info("Stored %d chunks in ChromaDB for tenant=%s", len(chunks), tenant)
 
         return len(chunks)
 
@@ -103,11 +111,15 @@ class RAGEngine:
 
     def query(self, tenant: str, question: str, top_k: int = None) -> dict:
         """Answer a question using RAG with similarity filtering and reranking."""
+        logger.info("RAG query: tenant=%s question=%r", tenant, question[:120])
         tenant_config = self._load_tenant_config(tenant)
 
         final_k = top_k or tenant_config.get("rag_top_k") or settings.rag_top_k
         retrieval_k = settings.rag_retrieval_k
+        threshold = settings.similarity_threshold
         temperature = tenant_config.get("help_temperature") or settings.help_temperature
+        logger.debug("RAG params: top_k=%d retrieval_k=%d threshold=%.2f temp=%.2f",
+                      final_k, retrieval_k, threshold, temperature)
 
         collection = self._get_collection(tenant)
         question_embedding = self.llm.get_embedding(question)
@@ -119,18 +131,30 @@ class RAGEngine:
             include=["documents", "metadatas", "distances"],
         )
 
+        total_retrieved = len(results["documents"][0]) if results["documents"] and results["documents"][0] else 0
+        logger.info("ChromaDB returned %d candidates", total_retrieved)
+
         if not results["documents"] or not results["documents"][0]:
+            logger.warning("No documents found in collection for tenant=%s", tenant)
             return {
                 "reply": "I don't have any documentation to answer that question yet. Please contact support for help.",
                 "sources": [],
                 "images": [],
             }
 
+        # Log all candidate distances for debugging
+        all_distances = results["distances"][0]
+        logger.info("Candidate distances: min=%.4f max=%.4f median=%.4f threshold=%.2f",
+                     min(all_distances), max(all_distances),
+                     sorted(all_distances)[len(all_distances) // 2], threshold)
+
         # Filter by similarity threshold and rerank
         candidates = []
+        filtered_out = 0
         for i, doc in enumerate(results["documents"][0]):
             distance = results["distances"][0][i]
-            if distance > settings.similarity_threshold:
+            if distance > threshold:
+                filtered_out += 1
                 continue
             meta = results["metadatas"][0][i]
             candidates.append({
@@ -139,7 +163,11 @@ class RAGEngine:
                 "distance": distance,
             })
 
+        logger.info("After threshold filter: %d kept, %d filtered out (threshold=%.2f)",
+                     len(candidates), filtered_out, threshold)
+
         if not candidates:
+            logger.warning("All candidates filtered out — consider lowering SIMILARITY_THRESHOLD (currently %.2f)", threshold)
             return {
                 "reply": "I couldn't find documentation closely matching your question. Could you rephrase it, or contact support for help?",
                 "sources": [],
@@ -149,6 +177,13 @@ class RAGEngine:
         # Rerank: combined score of embedding distance + keyword overlap
         ranked = self._rerank(question, candidates)
         top_chunks = ranked[:final_k]
+
+        logger.info("Top %d chunks after reranking:", len(top_chunks))
+        for i, chunk in enumerate(top_chunks):
+            meta = chunk["metadata"]
+            logger.info("  [%d] score=%.4f dist=%.4f file=%s chunk=%d",
+                        i, chunk.get("score", 0), chunk["distance"],
+                        meta.get("filename", "?"), meta.get("chunk_index", 0))
 
         # Build context ordered by relevance
         context_parts = []
@@ -203,7 +238,11 @@ class RAGEngine:
             f"## Documentation (ordered by relevance)\n{context}"
         )
 
+        logger.debug("System prompt length: %d chars, context length: %d chars",
+                     len(system_prompt), len(context))
         result = self.llm.chat(system_prompt, question, temperature=temperature)
+        logger.info("LLM reply length: %d chars, sources: %d, images: %d",
+                     len(result["reply"]), len(sources), len(image_filenames))
 
         # Deduplicate sources
         seen = set()

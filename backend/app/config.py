@@ -25,6 +25,9 @@ class Settings(BaseSettings):
     # ChromaDB
     chroma_persist_dir: str = "./data/chroma"
 
+    # Logging
+    log_level: str = "INFO"
+
     # Server
     host: str = "0.0.0.0"
     port: int = 8500

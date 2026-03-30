@@ -1,3 +1,4 @@
+import logging
 import os
 import re
 import uuid
@@ -7,6 +8,8 @@ from langchain_text_splitters import RecursiveCharacterTextSplitter
 
 from app.services.llm_service import LLMService
 from app.config import settings
+
+logger = logging.getLogger(__name__)
 
 # Minimum image dimensions to consider (skip tiny icons/spacers)
 MIN_IMAGE_WIDTH = 80
@@ -36,6 +39,7 @@ class DocumentProcessor:
 
         self._current_tenant = tenant
         ext = os.path.splitext(file_path)[1].lower()
+        logger.info("Processing file: type=%s title=%r path=%s", ext, title, file_path)
 
         if ext == ".pdf":
             text = self._extract_pdf(file_path)
@@ -46,8 +50,14 @@ class DocumentProcessor:
         else:
             raise ValueError(f"Unsupported file type: {ext}")
 
+        logger.info("Extracted %d chars of text from %s", len(text), os.path.basename(file_path))
+        if len(text.strip()) < 10:
+            logger.warning("Very little text extracted from %s — check file content", file_path)
+
         chunks = self.splitter.split_text(text)
         filename = os.path.basename(file_path)
+        logger.info("Split into %d chunks (chunk_size=%d, overlap=%d)",
+                     len(chunks), self.splitter._chunk_size, self.splitter._chunk_overlap)
 
         return [
             {
@@ -120,8 +130,8 @@ class DocumentProcessor:
                     description = self.llm.describe_image(image_bytes, context_snippet)
                     image_entries.append((img_filename, description))
 
-                except Exception:
-                    # Skip images that can't be extracted
+                except Exception as e:
+                    logger.warning("Failed to extract PDF image xref=%s: %s", img_info[0], e)
                     continue
 
             # Build the page content with image descriptions baked in
@@ -144,17 +154,23 @@ class DocumentProcessor:
         with open(file_path, "r", encoding="utf-8") as f:
             html = f.read()
 
+        logger.debug("HTML file size: %d bytes", len(html))
         soup = BeautifulSoup(html, "html.parser")
         doc_dir = os.path.dirname(os.path.abspath(file_path))
 
         # Process <img> tags — describe each and replace with text marker
-        for img_tag in soup.find_all("img"):
+        img_tags = soup.find_all("img")
+        logger.info("Found %d images in HTML", len(img_tags))
+        described = 0
+        for img_tag in img_tags:
             description = self._describe_html_image(img_tag, doc_dir)
             if description:
                 marker = soup.new_string(f"\n\n[Screenshot: {description}]\n\n")
                 img_tag.replace_with(marker)
+                described += 1
             else:
                 img_tag.decompose()
+        logger.info("Described %d/%d images", described, len(img_tags))
 
         # Extract clean text from the modified HTML
         text = soup.get_text(separator="\n")
