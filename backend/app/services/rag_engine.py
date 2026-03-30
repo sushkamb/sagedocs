@@ -116,7 +116,7 @@ class RAGEngine:
 
         final_k = top_k or tenant_config.get("rag_top_k") or settings.rag_top_k
         retrieval_k = settings.rag_retrieval_k
-        threshold = settings.similarity_threshold
+        threshold = tenant_config.get("similarity_threshold") or settings.similarity_threshold
         temperature = tenant_config.get("help_temperature") or settings.help_temperature
         logger.debug("RAG params: top_k=%d retrieval_k=%d threshold=%.2f temp=%.2f",
                       final_k, retrieval_k, threshold, temperature)

@@ -210,6 +210,7 @@ All settings are controlled via environment variables (`.env` file). See `.env.e
 | `EMBEDDING_MODEL` | `text-embedding-3-small` | Model for document embeddings |
 | `CHROMA_PERSIST_DIR` | `./data/chroma` | ChromaDB storage location |
 | `PORT` | `8500` | Server port |
+| `LOG_LEVEL` | `INFO` | Logging level (`DEBUG`, `INFO`, `WARNING`, `ERROR`) |
 | `CORS_ORIGINS` | `http://localhost` | Allowed CORS origins (comma-separated) |
 | `ADMIN_USERNAME` | `admin` | Admin dashboard login username |
 | `ADMIN_PASSWORD` | — | Admin dashboard login password |

@@ -20,7 +20,7 @@ class Settings(BaseSettings):
     chunk_overlap: int = 200
     rag_top_k: int = 8  # Final number of chunks sent to LLM
     rag_retrieval_k: int = 20  # Fetch more candidates for reranking
-    similarity_threshold: float = 0.5  # Max cosine distance (0=identical, lower=stricter)
+    similarity_threshold: float = 0.65  # Max cosine distance (0=identical, lower=stricter)
 
     # ChromaDB
     chroma_persist_dir: str = "./data/chroma"

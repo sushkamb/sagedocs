@@ -53,6 +53,12 @@ Edit `.env` and set at minimum:
 OPENAI_API_KEY=sk-your-actual-key-here
 ```
 
+For debugging RAG issues, you can also set:
+
+```
+LOG_LEVEL=DEBUG    # Verbose logging of the RAG pipeline (distances, scores, filtering)
+```
+
 All other settings have sensible defaults for local development.
 
 ### 2.3 Run the Server
@@ -453,6 +459,18 @@ chmod 755 data/chroma
 - Verify documents are uploaded: `curl http://localhost:8500/api/documents/list?tenant=chirocloud`
 - Re-upload documents if the list is empty
 - Check that the tenant name in the widget matches the tenant used during upload
+
+### Chat returns generic "couldn't find documentation" despite uploaded docs
+
+Set `LOG_LEVEL=DEBUG` in `.env` and restart. The logs will show:
+
+- **Candidate distances** — How similar the retrieved chunks are to the question
+- **Threshold filtering** — How many candidates were kept vs filtered out
+- **Reranking scores** — Which chunks were selected and their combined scores
+
+If you see `"All candidates filtered out"`, lower `SIMILARITY_THRESHOLD` in `.env` (default is `0.5`).
+
+If you see `"Very little text extracted"` during document upload, the file may not contain parseable text content.
 
 ### Docker container exits immediately
 

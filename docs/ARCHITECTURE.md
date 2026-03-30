@@ -540,6 +540,9 @@ EMBEDDING_MODEL=text-embedding-3-small
 # Storage
 CHROMA_PERSIST_DIR=./data/chroma
 
+# Logging
+LOG_LEVEL=INFO                   # DEBUG, INFO, WARNING, ERROR
+
 # Server
 HOST=0.0.0.0
 PORT=8500
@@ -734,7 +737,7 @@ To connect ForteAI to a new host application:
 
 | File | Purpose |
 |---|---|
-| `backend/app/main.py` | FastAPI app initialization, CORS, static mounts, root health check |
+| `backend/app/main.py` | FastAPI app initialization, CORS, logging setup, static mounts, root health check |
 | `backend/app/config.py` | Pydantic `Settings` class, reads `.env` |
 | `backend/app/auth.py` | API key verification dependency for external endpoints |
 | `backend/app/models/schemas.py` | `ChatRequest`, `ChatResponse`, `TenantConfig`, etc. |

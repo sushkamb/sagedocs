@@ -97,6 +97,9 @@ EMBEDDING_MODEL=text-embedding-3-large
 # ChromaDB
 CHROMA_PERSIST_DIR=./data/chroma
 
+# Logging — DEBUG for verbose RAG pipeline tracing, INFO for production
+LOG_LEVEL=INFO
+
 # Server — bind to localhost only; Apache handles external traffic
 HOST=127.0.0.1
 PORT=8100
@@ -249,6 +252,16 @@ Then check in a browser:
 # View live app logs
 sudo journalctl -u forteaibot -f
 
+# View only RAG pipeline logs (retrieval, filtering, reranking)
+sudo journalctl -u forteaibot -f | grep rag_engine
+
+# View only chat routing logs (help/data mode decisions)
+sudo journalctl -u forteaibot -f | grep chat
+
+# Enable verbose logging for debugging (edit .env then restart)
+# Set LOG_LEVEL=DEBUG for full RAG pipeline detail (prompt sizes, all query params)
+# Set LOG_LEVEL=INFO for standard production logging (recommended)
+
 # Restart after code update
 cd /var/www/forteaibot && git pull
 sudo systemctl restart forteaibot
@@ -285,3 +298,5 @@ sudo bash /home/ubuntu/ForteAIBot/scripts/deploy.sh --update
 | Permission errors | Fix ownership: `sudo chown -R www-data:www-data /var/www/forteaibot` |
 | SSL certificate expired | Run: `sudo certbot renew` |
 | Chat responses timeout | Increase `ProxyTimeout` in Apache config |
+| Chat returns no answer | Set `LOG_LEVEL=DEBUG` in `.env`, restart, and check logs for similarity scores and threshold filtering. If all candidates are filtered, lower `SIMILARITY_THRESHOLD` |
+| Documents uploaded but not found | Check logs for `"Very little text extracted"` warnings during ingestion — the document may not have parseable content |
