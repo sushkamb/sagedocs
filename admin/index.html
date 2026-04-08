@@ -11,6 +11,7 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;0,9..40,600;0,9..40,700;1,9..40,400&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="styles.css">
+    <script src="/widget/forteai-widget.js"></script>
 </head>
 <body>
 
@@ -216,18 +217,12 @@
             <!-- ═══ TEST CHAT TAB ═══ -->
             <div class="tab-content" id="tab-test">
                 <div class="card chat-container">
-                    <div class="chat-messages" id="testMessages">
+                    <div id="testChatHost" class="test-chat-host">
                         <div class="chat-empty">
                             <svg class="chat-empty-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
-                            <span style="font-weight:500; color:var(--text-secondary);">Test your knowledge base</span>
-                            <span style="font-size:12px;">Ask a question to see how the AI responds</span>
+                            <span style="font-weight:500; color:var(--text-secondary);">Select a tenant to start testing</span>
+                            <span style="font-size:12px;">Choose a tenant from the sidebar to load its chat</span>
                         </div>
-                    </div>
-                    <div class="chat-input-row">
-                        <input type="text" id="testInput" placeholder="Ask a test question..." />
-                        <button class="btn btn-primary" id="testSend">
-                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>
-                        </button>
                     </div>
                 </div>
             </div>
@@ -434,6 +429,7 @@
             if (currentTenant) {
                 loadDocuments();
                 loadAnalytics();
+                mountTestChat(currentTenant);
             }
         });
 
@@ -648,68 +644,14 @@
                 });
         });
 
-        // ═══ TEST CHAT ═══
-        document.getElementById("testSend").addEventListener("click", sendTestMessage);
-        document.getElementById("testInput").addEventListener("keydown", function (e) {
-            if (e.key === "Enter") sendTestMessage();
-        });
-
-        function formatMarkdown(text) {
-            return text
-                .replace(/&/g, "&amp;")
-                .replace(/</g, "&lt;")
-                .replace(/>/g, "&gt;")
-                .replace(/```([\s\S]*?)```/g, '<pre style="background:rgba(0,0,0,0.04);border-radius:6px;padding:8px 10px;font-family:monospace;font-size:12px;white-space:pre-wrap;margin:6px 0;">$1</pre>')
-                .replace(/`([^`]+)`/g, '<code style="background:rgba(0,0,0,0.04);border-radius:3px;padding:1px 5px;font-family:monospace;font-size:12px;">$1</code>')
-                .replace(/\*\*(.+?)\*\*/g, "<strong>$1</strong>")
-                .replace(/\*(.+?)\*/g, "<em>$1</em>")
-                .replace(/^\d+\.\s+(.+)$/gm, '<li style="margin-bottom:4px;">$1</li>')
-                .replace(/^[\-\*]\s+(.+)$/gm, '<li style="margin-bottom:4px;">$1</li>')
-                .replace(/((?:<li[^>]*>.*<\/li>\n?)+)/g, '<ul style="list-style:disc;padding-left:20px;margin:6px 0;">$1</ul>')
-                .replace(/\n\n/g, "<br><br>")
-                .replace(/\n/g, "<br>");
-        }
-
-        function sendTestMessage() {
-            var input = document.getElementById("testInput");
-            var msg = input.value.trim();
-            if (!msg || !currentTenant) return;
-            input.value = "";
-
-            var messagesEl = document.getElementById("testMessages");
-            // Remove empty state
-            var empty = messagesEl.querySelector(".chat-empty");
-            if (empty) empty.remove();
-
-            var userDiv = document.createElement("div");
-            userDiv.className = "chat-msg chat-msg-user";
-            userDiv.textContent = msg;
-            messagesEl.appendChild(userDiv);
-            messagesEl.scrollTop = messagesEl.scrollHeight;
-
-            fetch(API_BASE + "/api/chat/help", {
-                method: "POST",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({ tenant: currentTenant, message: msg })
-            })
-            .then(function (r) { return r.json(); })
-            .then(function (data) {
-                var sources = data.sources && data.sources.length > 0
-                    ? '<div style="font-size:11px; color:var(--text-muted); margin-top:8px; padding-top:6px; border-top:1px solid var(--card-border);">Sources: ' + data.sources.map(function(s) { return s.title; }).join(", ") + '</div>'
-                    : "";
-                var imagesHtml = "";
-                if (data.images && data.images.length > 0) {
-                    imagesHtml = '<div style="margin-top:8px; display:flex; flex-wrap:wrap; gap:6px;">';
-                    data.images.forEach(function (imgUrl) {
-                        imagesHtml += '<img src="' + API_BASE + imgUrl + '" onclick="window.open(this.src)" />';
-                    });
-                    imagesHtml += '</div>';
-                }
-                var replyDiv = document.createElement("div");
-                replyDiv.className = "chat-msg chat-msg-assistant";
-                replyDiv.innerHTML = formatMarkdown(data.reply) + imagesHtml + sources;
-                messagesEl.appendChild(replyDiv);
-                messagesEl.scrollTop = messagesEl.scrollHeight;
+        // ═══ TEST CHAT (mounts the embeddable ForteAI widget inline) ═══
+        function mountTestChat(tenant) {
+            if (!tenant || typeof ForteAI === "undefined") return;
+            ForteAI.init({
+                tenant: tenant,
+                apiUrl: API_BASE,
+                inline: true,
+                target: "#testChatHost"
             });
         }
 

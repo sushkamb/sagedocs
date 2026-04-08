@@ -509,6 +509,7 @@ A single-page admin interface with four tabs:
 - Live chat interface against current indexed docs
 - Test answers before users see them
 - Shows sources and images in responses
+- Implementation note: this tab embeds the actual `forteai-widget.js` in **inline mode** (`ForteAI.init({ inline: true, target: '#testChatHost', ... })`) so admins see the exact rendering, markdown handling, and behavior end users will get. There is no separate admin chat code path.
 
 ### Analytics Tab
 - Total questions asked
@@ -753,7 +754,7 @@ To connect ForteAI to a new host application:
 | `backend/app/services/document_processor.py` | File parsing, image extraction, text chunking |
 | `backend/app/tools/registry.py` | Utility to load and validate YAML tool registries |
 | `backend/tools/chirocloud.yaml` | ChiroCloud tool definitions (8 tools) |
-| `widget/forteai-widget.js` | Embeddable chat widget with FAB, chat panel, markdown rendering |
+| `widget/forteai-widget.js` | Embeddable chat widget with FAB, chat panel, markdown rendering. Supports floating mode (default) and `inline` mode for embedding inside a host element (used by the admin Test Chat). |
 | `widget/forteai-widget.css` | Widget styles, responsive layout, light/dark themes |
 | `admin/index.html` | Admin dashboard: docs, test chat, analytics, settings |
 | `admin/login.html` | Admin login page (username/password → JWT token) |

@@ -2,7 +2,7 @@
  * ForteAI Chat Widget
  * Embeddable chat widget for any web application.
  *
- * Usage:
+ * Floating mode (default) — adds a FAB + chat panel to the page:
  *   <script src="https://forteai.yourdomain.com/widget/forteai-widget.js"></script>
  *   <script>
  *     ForteAI.init({
@@ -14,6 +14,15 @@
  *       apiUrl: 'https://forteai.yourdomain.com'
  *     });
  *   </script>
+ *
+ * Inline mode — render the chat panel inside an existing element (no FAB):
+ *   ForteAI.init({
+ *     tenant: 'chirocloud',
+ *     inline: true,
+ *     target: '#myChatHost'  // CSS selector or HTMLElement
+ *   });
+ *
+ * Re-init (e.g. switch tenant) — call init() again; the previous instance is destroyed.
  */
 (function () {
     "use strict";
@@ -26,6 +35,9 @@
         messages: [],
 
         init: function (options) {
+            // Destroy any prior instance so init() can be called again (e.g. tenant switch)
+            this.destroy();
+
             this.config = Object.assign({
                 tenant: "",
                 accountNumber: "",
@@ -35,7 +47,9 @@
                 apiUrl: "",
                 welcomeMessage: "Hi! How can I help you?",
                 placeholder: "Ask me anything...",
-                starterQuestions: []
+                starterQuestions: [],
+                inline: false,
+                target: null
             }, options);
 
             if (!this.config.apiUrl) {
@@ -48,9 +62,21 @@
                 }
             }
 
+            this.sessionId = null;
+            this.messages = [];
             this._loadStyles();
             this._fetchTenantConfig();
             this._render();
+        },
+
+        destroy: function () {
+            if (this.container && this.container.parentNode) {
+                this.container.parentNode.removeChild(this.container);
+            }
+            this.container = null;
+            this.isOpen = false;
+            this.sessionId = null;
+            this.messages = [];
         },
 
         _fetchTenantConfig: function () {
@@ -71,33 +97,59 @@
         },
 
         _loadStyles: function () {
-            var link = document.createElement("link");
-            link.rel = "stylesheet";
-            link.href = this.config.apiUrl + "/widget/forteai-widget.css";
-            document.head.appendChild(link);
+            var self = this;
+            if (!document.getElementById("forteai-widget-css")) {
+                var link = document.createElement("link");
+                link.id = "forteai-widget-css";
+                link.rel = "stylesheet";
+                link.href = this.config.apiUrl + "/widget/forteai-widget.css";
+                document.head.appendChild(link);
+            }
 
-            var markedScript = document.createElement("script");
-            markedScript.src = "https://cdn.jsdelivr.net/npm/marked@15/marked.min.js";
-            document.head.appendChild(markedScript);
+            if (!document.getElementById("forteai-marked-js") && typeof marked === "undefined") {
+                var markedScript = document.createElement("script");
+                markedScript.id = "forteai-marked-js";
+                markedScript.src = "https://cdn.jsdelivr.net/npm/marked@15/marked.min.js";
+                markedScript.onload = function () { self._rerenderAssistantMessages(); };
+                document.head.appendChild(markedScript);
+            }
 
-            var purifyScript = document.createElement("script");
-            purifyScript.src = "https://cdn.jsdelivr.net/npm/dompurify@3/dist/purify.min.js";
-            document.head.appendChild(purifyScript);
+            if (!document.getElementById("forteai-dompurify-js") && typeof DOMPurify === "undefined") {
+                var purifyScript = document.createElement("script");
+                purifyScript.id = "forteai-dompurify-js";
+                purifyScript.src = "https://cdn.jsdelivr.net/npm/dompurify@3/dist/purify.min.js";
+                purifyScript.onload = function () { self._rerenderAssistantMessages(); };
+                document.head.appendChild(purifyScript);
+            }
         },
 
         _render: function () {
             var self = this;
-            var posClass = this.config.position === "bottom-left" ? "forteai-left" : "forteai-right";
+            var inline = !!this.config.inline;
+            var posClass = inline
+                ? "forteai-inline"
+                : (this.config.position === "bottom-left" ? "forteai-left" : "forteai-right");
 
             // Container
             this.container = document.createElement("div");
             this.container.className = "forteai-container " + posClass;
+
+            var panelStyle = inline ? "" : 'style="display:none;"';
+            var resizeHandle = inline ? "" : '<div class="forteai-resize-handle" id="forteai-resize-handle"></div>';
+            var closeButton = inline ? "" : '<button class="forteai-close" id="forteai-close">&times;</button>';
+            var fabButton = inline ? "" :
+                '<button class="forteai-fab" id="forteai-fab" title="Chat with ForteAI">' +
+                    '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">' +
+                        '<path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path>' +
+                    '</svg>' +
+                '</button>';
+
             this.container.innerHTML =
-                '<div class="forteai-chat-panel" id="forteai-panel" style="display:none;">' +
-                    '<div class="forteai-resize-handle" id="forteai-resize-handle"></div>' +
+                '<div class="forteai-chat-panel" id="forteai-panel" ' + panelStyle + '>' +
+                    resizeHandle +
                     '<div class="forteai-header">' +
                         '<span class="forteai-title">ForteAI Assistant</span>' +
-                        '<button class="forteai-close" id="forteai-close">&times;</button>' +
+                        closeButton +
                     '</div>' +
                     '<div class="forteai-messages" id="forteai-messages"></div>' +
                     '<div class="forteai-input-area">' +
@@ -105,13 +157,22 @@
                         '<button id="forteai-send">&#9654;</button>' +
                     '</div>' +
                 '</div>' +
-                '<button class="forteai-fab" id="forteai-fab" title="Chat with ForteAI">' +
-                    '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">' +
-                        '<path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path>' +
-                    '</svg>' +
-                '</button>';
+                fabButton;
 
-            document.body.appendChild(this.container);
+            // Mount: inline -> into target; floating -> body
+            var mountTarget = document.body;
+            if (inline) {
+                var t = this.config.target;
+                if (typeof t === "string") t = document.querySelector(t);
+                if (!t) {
+                    console.warn("[ForteAI] inline mode requires a valid 'target' element");
+                    return;
+                }
+                t.innerHTML = "";
+                mountTarget = t;
+                this.isOpen = true;
+            }
+            mountTarget.appendChild(this.container);
 
             // Add welcome message
             this._addMessage("assistant", this.config.welcomeMessage);
@@ -121,48 +182,50 @@
                 this._addStarterQuestions();
             }
 
-            // Event listeners
-            document.getElementById("forteai-fab").addEventListener("click", function () {
-                self.toggle();
-            });
-            document.getElementById("forteai-close").addEventListener("click", function () {
-                self.toggle();
-            });
+            // Event listeners (inline mode skips FAB/close/resize)
+            if (!inline) {
+                document.getElementById("forteai-fab").addEventListener("click", function () {
+                    self.toggle();
+                });
+                document.getElementById("forteai-close").addEventListener("click", function () {
+                    self.toggle();
+                });
+
+                var resizeEl = document.getElementById("forteai-resize-handle");
+                var panel = document.getElementById("forteai-panel");
+                var isResizing = false;
+                var startX, startY, startW, startH;
+
+                resizeEl.addEventListener("mousedown", function (e) {
+                    isResizing = true;
+                    startX = e.clientX;
+                    startY = e.clientY;
+                    startW = panel.offsetWidth;
+                    startH = panel.offsetHeight;
+                    e.preventDefault();
+                });
+
+                document.addEventListener("mousemove", function (e) {
+                    if (!isResizing) return;
+                    var isLeft = self.config.position === "bottom-left";
+                    var dw = isLeft ? (e.clientX - startX) : (startX - e.clientX);
+                    var dh = startY - e.clientY;
+                    var newW = Math.max(320, Math.min(700, startW + dw));
+                    var newH = Math.max(400, Math.min(800, startH + dh));
+                    panel.style.width = newW + "px";
+                    panel.style.height = newH + "px";
+                });
+
+                document.addEventListener("mouseup", function () {
+                    isResizing = false;
+                });
+            }
+
             document.getElementById("forteai-send").addEventListener("click", function () {
                 self._sendMessage();
             });
             document.getElementById("forteai-input").addEventListener("keydown", function (e) {
                 if (e.key === "Enter") self._sendMessage();
-            });
-
-            // Resize drag logic
-            var resizeHandle = document.getElementById("forteai-resize-handle");
-            var panel = document.getElementById("forteai-panel");
-            var isResizing = false;
-            var startX, startY, startW, startH;
-
-            resizeHandle.addEventListener("mousedown", function (e) {
-                isResizing = true;
-                startX = e.clientX;
-                startY = e.clientY;
-                startW = panel.offsetWidth;
-                startH = panel.offsetHeight;
-                e.preventDefault();
-            });
-
-            document.addEventListener("mousemove", function (e) {
-                if (!isResizing) return;
-                var isLeft = self.config.position === "bottom-left";
-                var dw = isLeft ? (e.clientX - startX) : (startX - e.clientX);
-                var dh = startY - e.clientY;
-                var newW = Math.max(320, Math.min(700, startW + dw));
-                var newH = Math.max(400, Math.min(800, startH + dh));
-                panel.style.width = newW + "px";
-                panel.style.height = newH + "px";
-            });
-
-            document.addEventListener("mouseup", function () {
-                isResizing = false;
             });
         },
 
@@ -230,6 +293,14 @@
                 .replace(/\n/g, "<br>");
         },
 
+        _rerenderAssistantMessages: function () {
+            if (typeof marked === "undefined" || typeof DOMPurify === "undefined") return;
+            var nodes = document.querySelectorAll(".forteai-msg-assistant .forteai-msg-text[data-markdown]");
+            for (var i = 0; i < nodes.length; i++) {
+                nodes[i].innerHTML = this._formatMarkdown(nodes[i].getAttribute("data-markdown"));
+            }
+        },
+
         _addMessage: function (role, text, sources, images) {
             var self = this;
             var messagesEl = document.getElementById("forteai-messages");
@@ -240,6 +311,7 @@
             textDiv.className = "forteai-msg-text";
 
             if (role === "assistant") {
+                textDiv.setAttribute("data-markdown", text);
                 textDiv.innerHTML = this._formatMarkdown(text);
             } else {
                 textDiv.textContent = text;
