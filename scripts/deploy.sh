@@ -11,7 +11,15 @@
 set -euo pipefail
 
 # --- Configuration ---
-SRC_DIR="${SRC_DIR:-$HOME/SageDocs}"
+# Resolve default SRC_DIR from the invoking user's home, not root's
+# (sudo resets $HOME to /root unless -E is passed with HOME preserved).
+if [[ -z "${SRC_DIR:-}" ]]; then
+    if [[ -n "${SUDO_USER:-}" ]]; then
+        SRC_DIR="$(getent passwd "$SUDO_USER" | cut -d: -f6)/SageDocs"
+    else
+        SRC_DIR="$HOME/SageDocs"
+    fi
+fi
 DEPLOY_DIR="/var/www/sagedocs"
 BACKUP_DIR="/var/www/backups/sagedocs"
 MAX_BACKUPS=5
