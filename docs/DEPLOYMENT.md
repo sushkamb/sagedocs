@@ -1,6 +1,6 @@
 # Deployment Guide — AWS Lightsail
 
-Deploy ForteAI Bot to a 2GB AWS Lightsail VM using Apache as reverse proxy, uvicorn as the ASGI server, and systemd for process management.
+Deploy SageDocs to a 2GB AWS Lightsail VM using Apache as reverse proxy, uvicorn as the ASGI server, and systemd for process management.
 
 ## Architecture
 
@@ -48,29 +48,29 @@ sudo apt install -y python3 python3-venv python3-dev \
 
 ## Step 4: Deploy App Code
 
-The repo is cloned at `/home/ubuntu/ForteAIBot`. Use the deploy script to sync it to the deployment directory:
+The repo is cloned at `/home/ubuntu/SageDocs`. Use the deploy script to sync it to the deployment directory:
 
 ```bash
 # First-time deploy: creates venv, data dirs, syncs code, installs deps
-sudo bash /home/ubuntu/ForteAIBot/scripts/deploy.sh
+sudo bash /home/ubuntu/SageDocs/scripts/deploy.sh
 ```
 
-The script uses `rsync` to copy code from `/home/ubuntu/ForteAIBot` to `/var/www/forteaibot`, preserving `.env`, `venv/`, `data/`, and `uploads/` in the deploy directory.
+The script uses `rsync` to copy code from `/home/ubuntu/SageDocs` to `/var/www/sagedocs`, preserving `.env`, `venv/`, `data/`, and `uploads/` in the deploy directory.
 
 For subsequent deploys after code changes:
 
 ```bash
 # Code-only update: syncs code, updates deps, restarts service (skips venv/dir setup)
-sudo bash /home/ubuntu/ForteAIBot/scripts/deploy.sh --update
+sudo bash /home/ubuntu/SageDocs/scripts/deploy.sh --update
 ```
 
 <details>
 <summary>Manual setup (alternative)</summary>
 
 ```bash
-sudo mkdir -p /var/www/forteaibot
-sudo chown $USER:$USER /var/www/forteaibot
-cd /var/www/forteaibot
+sudo mkdir -p /var/www/sagedocs
+sudo chown $USER:$USER /var/www/sagedocs
+cd /var/www/sagedocs
 git clone <your-repo-url> .
 python3 -m venv venv
 source venv/bin/activate
@@ -81,7 +81,7 @@ pip install -r requirements.txt
 
 ## Step 5: Configure Environment
 
-Create `/var/www/forteaibot/backend/.env`:
+Create `/var/www/sagedocs/backend/.env`:
 
 ```ini
 # LLM Provider (openai or anthropic)
@@ -119,28 +119,28 @@ JWT_SECRET=<generate-a-random-jwt-secret>
 ## Step 6: Set Up Data Directories
 
 ```bash
-cd /var/www/forteaibot/backend
+cd /var/www/sagedocs/backend
 mkdir -p data/chroma data/images data/analytics data/tenants uploads
 chmod -R 755 data uploads
 ```
 
 ## Step 7: Create systemd Service
 
-Create `/etc/systemd/system/forteaibot.service`:
+Create `/etc/systemd/system/sagedocs.service`:
 
 ```ini
 [Unit]
-Description=ForteAI Bot
+Description=SageDocs
 After=network.target
 
 [Service]
 User=www-data
 Group=www-data
-WorkingDirectory=/var/www/forteaibot/backend
-ExecStart=/var/www/forteaibot/venv/bin/uvicorn app.main:app --host 127.0.0.1 --port 8100
+WorkingDirectory=/var/www/sagedocs/backend
+ExecStart=/var/www/sagedocs/venv/bin/uvicorn app.main:app --host 127.0.0.1 --port 8100
 Restart=always
 RestartSec=5
-EnvironmentFile=/var/www/forteaibot/backend/.env
+EnvironmentFile=/var/www/sagedocs/backend/.env
 
 [Install]
 WantedBy=multi-user.target
@@ -150,15 +150,15 @@ Enable and start:
 
 ```bash
 # Set ownership
-sudo chown -R www-data:www-data /var/www/forteaibot
+sudo chown -R www-data:www-data /var/www/sagedocs
 
 # Start the service
 sudo systemctl daemon-reload
-sudo systemctl enable forteaibot
-sudo systemctl start forteaibot
+sudo systemctl enable sagedocs
+sudo systemctl start sagedocs
 
 # Verify
-sudo systemctl status forteaibot
+sudo systemctl status sagedocs
 curl http://127.0.0.1:8100/health
 ```
 
@@ -170,7 +170,7 @@ Enable required Apache modules:
 sudo a2enmod proxy proxy_http proxy_wstunnel headers ssl rewrite
 ```
 
-Create `/etc/apache2/sites-available/forteaibot.conf`:
+Create `/etc/apache2/sites-available/sagedocs.conf`:
 
 ```apache
 <VirtualHost *:80>
@@ -204,15 +204,15 @@ Create `/etc/apache2/sites-available/forteaibot.conf`:
     ProxyTimeout 120
     Timeout 120
 
-    ErrorLog ${APACHE_LOG_DIR}/forteaibot_error.log
-    CustomLog ${APACHE_LOG_DIR}/forteaibot_access.log combined
+    ErrorLog ${APACHE_LOG_DIR}/sagedocs_error.log
+    CustomLog ${APACHE_LOG_DIR}/sagedocs_access.log combined
 </VirtualHost>
 ```
 
 Activate the site:
 
 ```bash
-sudo a2ensite forteaibot.conf
+sudo a2ensite sagedocs.conf
 sudo a2dissite 000-default.conf
 sudo systemctl restart apache2
 ```
@@ -250,52 +250,88 @@ Then check in a browser:
 
 ```bash
 # View live app logs
-sudo journalctl -u forteaibot -f
+sudo journalctl -u sagedocs -f
 
 # View only RAG pipeline logs (retrieval, filtering, reranking)
-sudo journalctl -u forteaibot -f | grep rag_engine
+sudo journalctl -u sagedocs -f | grep rag_engine
 
 # View only chat routing logs (help/data mode decisions)
-sudo journalctl -u forteaibot -f | grep chat
+sudo journalctl -u sagedocs -f | grep chat
 
 # Enable verbose logging for debugging (edit .env then restart)
 # Set LOG_LEVEL=DEBUG for full RAG pipeline detail (prompt sizes, all query params)
 # Set LOG_LEVEL=INFO for standard production logging (recommended)
 
 # Restart after code update
-cd /var/www/forteaibot && git pull
-sudo systemctl restart forteaibot
+cd /var/www/sagedocs && git pull
+sudo systemctl restart sagedocs
 
 # Check Apache error logs
-sudo tail -f /var/log/apache2/forteaibot_error.log
+sudo tail -f /var/log/apache2/sagedocs_error.log
 
 # Check service status
-sudo systemctl status forteaibot
+sudo systemctl status sagedocs
 ```
 
 ### Updating the App
 
 ```bash
 # Pull latest in the git clone, sync to deploy dir, restart service
-sudo bash /home/ubuntu/ForteAIBot/scripts/deploy.sh --update
+sudo bash /home/ubuntu/SageDocs/scripts/deploy.sh --update
 ```
+
+### CI/CD with a Self-Hosted GitHub Actions Runner
+
+The repo ships with `.github/workflows/deploy.yml`, which runs `scripts/deploy.sh --update` on a self-hosted runner whenever code is pushed to `main`. One-time setup on the server:
+
+**1. Install the runner**
+
+In GitHub: *Settings → Actions → Runners → New self-hosted runner* and follow the Linux x64 instructions. Install it as the `ubuntu` user under `/home/ubuntu/actions-runner`. When prompted for labels, add `sagedocs` (the workflow targets `[self-hosted, sagedocs]`).
+
+**2. Install as a service**
+
+```bash
+cd /home/ubuntu/actions-runner
+sudo ./svc.sh install ubuntu
+sudo ./svc.sh start
+```
+
+**3. Grant passwordless sudo for the deploy script only**
+
+The workflow runs `sudo -E bash scripts/deploy.sh --update`, so the runner user needs to invoke that one script without a password. Create `/etc/sudoers.d/sagedocs-runner`:
+
+```
+ubuntu ALL=(root) NOPASSWD: SETENV: /bin/bash /home/ubuntu/actions-runner/_work/sagedocs/sagedocs/scripts/deploy.sh *
+```
+
+Then `sudo visudo -c` to validate.
+
+**4. Trigger a deploy**
+
+Push to `main`, or run *Actions → Deploy to production → Run workflow* in GitHub. The runner will checkout into its work directory, run the deploy script with `SRC_DIR` pointed at the checkout, and the script will rsync to `/var/www/sagedocs` and restart the systemd unit.
+
+**Notes**
+
+- `/home/ubuntu/SageDocs` (the manual-deploy clone) is no longer needed once CI is wired up, but it's harmless to leave in place.
+- The runner itself survives reboots via systemd (`actions.runner.*.service`).
+- To check runner status: `sudo systemctl status 'actions.runner.*'`.
 
 ### Files Created on Server
 
 | File | Purpose |
 |---|---|
-| `/var/www/forteaibot/backend/.env` | Environment configuration |
-| `/etc/systemd/system/forteaibot.service` | systemd service unit |
-| `/etc/apache2/sites-available/forteaibot.conf` | Apache virtual host |
+| `/var/www/sagedocs/backend/.env` | Environment configuration |
+| `/etc/systemd/system/sagedocs.service` | systemd service unit |
+| `/etc/apache2/sites-available/sagedocs.conf` | Apache virtual host |
 
 ### Troubleshooting
 
 | Issue | Fix |
 |---|---|
-| `502 Bad Gateway` | Check if uvicorn is running: `sudo systemctl status forteaibot` |
+| `502 Bad Gateway` | Check if uvicorn is running: `sudo systemctl status sagedocs` |
 | `503 Service Unavailable` | Check Apache modules: `sudo a2enmod proxy proxy_http` |
-| App won't start | Check logs: `sudo journalctl -u forteaibot -e` |
-| Permission errors | Fix ownership: `sudo chown -R www-data:www-data /var/www/forteaibot` |
+| App won't start | Check logs: `sudo journalctl -u sagedocs -e` |
+| Permission errors | Fix ownership: `sudo chown -R www-data:www-data /var/www/sagedocs` |
 | SSL certificate expired | Run: `sudo certbot renew` |
 | Chat responses timeout | Increase `ProxyTimeout` in Apache config |
 | Chat returns no answer | Set `LOG_LEVEL=DEBUG` in `.env`, restart, and check logs for similarity scores and threshold filtering. If all candidates are filtered, lower `SIMILARITY_THRESHOLD` |

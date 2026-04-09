@@ -6,7 +6,7 @@
 
 **Architecture:** Two-phase pipeline. Phase 1 captures raw UI data from the live app into `docs/captures/` files. Phase 2 spawns 4 parallel documentation-writer agents that read captures and produce polished markdown docs in `backend/uploads/chirocloud/`. The user can then upload these files to production as needed.
 
-**Tech Stack:** Playwright (browser automation), Markdown, ForteAI RAG pipeline
+**Tech Stack:** Playwright (browser automation), Markdown, SageDocs RAG pipeline
 
 ---
 
@@ -379,11 +379,11 @@ git commit -m "docs: review and polish ChiroCloud documentation"
 
 ---
 
-## Task 8: Upload to Local ForteAI and Verify
+## Task 8: Upload to Local SageDocs and Verify
 
-**Prerequisite:** ForteAI backend must be running at `localhost:8500`.
+**Prerequisite:** SageDocs backend must be running at `localhost:8500`.
 
-**Step 1: Check if ForteAI is running**
+**Step 1: Check if SageDocs is running**
 
 ```bash
 curl -s http://localhost:8500/api/tenants/chirocloud | head -5
@@ -469,7 +469,7 @@ Expected: Each returns a relevant, detailed answer citing the new documentation.
 | 5 | Capture billing & finance screens | Browser capture |
 | 6 | Write docs with 4 parallel agents | Agent team |
 | 7 | Review documentation quality | Manual review |
-| 8 | Upload to ForteAI and verify RAG | Integration test |
+| 8 | Upload to SageDocs and verify RAG | Integration test |
 
 **Output files available for production upload:**
 ```
@@ -480,4 +480,4 @@ backend/uploads/chirocloud/
   billing-and-finance.md   # Ledger, claims, statements, reports
 ```
 
-These files are standalone markdown — copy them to any ForteAI production instance and upload via the admin dashboard or API.
+These files are standalone markdown — copy them to any SageDocs production instance and upload via the admin dashboard or API.

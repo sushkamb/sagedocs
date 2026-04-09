@@ -1,4 +1,4 @@
-# ForteAI Tool Registry — ChiroCloud
+# SageDocs Tool Registry — ChiroCloud
 # Each tool maps to a read-only API endpoint in ChiroCloud
 # Endpoint convention: /api/{Controller}/{Action} (PascalCase)
 

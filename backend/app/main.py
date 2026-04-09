@@ -24,7 +24,7 @@ logging.getLogger("openai").setLevel(logging.WARNING)
 logging.getLogger("onnxruntime").setLevel(logging.ERROR)
 
 app = FastAPI(
-    title="ForteAI Bot",
+    title="SageDocs",
     description="Multi-tenant AI assistant with Help Mode (RAG) and Data Mode (Function Calling)",
     version="0.1.0",
 )
@@ -66,7 +66,7 @@ if os.path.exists(admin_dir):
 @app.get("/")
 async def root():
     return {
-        "name": "ForteAI Bot",
+        "name": "SageDocs",
         "version": "0.1.0",
         "status": "running",
         "docs": "/docs",

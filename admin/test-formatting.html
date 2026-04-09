@@ -1,21 +1,21 @@
 <!DOCTYPE html>
 <html>
-<head><title>ForteAI Formatting Test</title></head>
+<head><title>SageDocs Formatting Test</title></head>
 <body style="font-family: sans-serif; padding: 20px;">
-  <h1>ForteAI Widget — Formatting Test</h1>
+  <h1>SageDocs Widget — Formatting Test</h1>
   <p>The chat widget should appear in the bottom-right corner. Click it to open.</p>
   <p>Type any message — the widget will simulate a rich markdown response to verify formatting.</p>
 
-  <script src="http://localhost:8500/widget/forteai-widget.js"></script>
+  <script src="http://localhost:8500/widget/sagedocs-widget.js"></script>
   <script>
-    ForteAI.init({
+    SageDocs.init({
       tenant: 'chirocloud',
       apiUrl: 'http://localhost:8500'
     });
 
     // Override _sendMessage to inject a rich markdown test response
-    ForteAI._sendMessage = function () {
-      var input = document.getElementById("forteai-input");
+    SageDocs._sendMessage = function () {
+      var input = document.getElementById("sagedocs-input");
       var message = input.value.trim();
       if (!message) return;
 

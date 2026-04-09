@@ -1,8 +1,8 @@
-# CLAUDE.md — ForteAI Bot
+# CLAUDE.md — SageDocs
 
 ## Overview
 
-ForteAI is a standalone, multi-tenant AI assistant product with two modes:
+SageDocs is a standalone, multi-tenant AI assistant product with two modes:
 - **Help Mode** — RAG over uploaded documentation (Phase 1)
 - **Data Mode** — LLM function calling against host app APIs (Phase 2)
 
@@ -17,7 +17,7 @@ ForteAI is a standalone, multi-tenant AI assistant product with two modes:
 ## Project Structure
 
 ```
-forteaibot/
+sagedocs/
 ├── backend/
 │   ├── app/
 │   │   ├── main.py              # FastAPI entry point
@@ -37,7 +37,6 @@ forteaibot/
 │   ├── tools/                   # YAML tool definitions per tenant
 │   │   └── chirocloud.yaml
 │   ├── requirements.txt
-│   └── Dockerfile
 ├── widget/                      # Embeddable chat widget
 ├── admin/                       # Admin dashboard
 └── docs/DESIGN.md               # Full design document
@@ -55,15 +54,11 @@ cp ../.env.example .env   # Edit with your API keys
 
 # Run locally
 uvicorn app.main:app --reload --port 8500
-
-# Run with Docker
-docker build -t forteai .
-docker run -p 8500:8500 forteai
 ```
 
 ## Key Patterns
 
-- **Multi-tenancy:** ForteAI tenant (which app) + App-level tenant (which account)
+- **Multi-tenancy:** SageDocs tenant (which app) + App-level tenant (which account)
 - **Tool Registry:** YAML files in `backend/tools/` define available data queries per tenant
 - **Adding a new data query:** Add entry to the tenant's YAML + build the API endpoint in the host app
 - **Adding help content:** Upload via admin dashboard or POST to `/api/documents/upload`

@@ -210,7 +210,7 @@ class RAGEngine:
         custom_instructions = tenant_config.get("system_prompt", "")
 
         system_prompt = (
-            f"You are ForteAI, an expert support assistant for {tenant_display}. "
+            f"You are SageDocs, an expert support assistant for {tenant_display}. "
             "Your role is to help users by answering questions accurately using the provided documentation.\n\n"
         )
 

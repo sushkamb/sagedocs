@@ -3,15 +3,15 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>ForteAI - Admin Dashboard</title>
+    <title>SageDocs - Admin Dashboard</title>
     <script>
         // Apply saved theme immediately to prevent flash
-        (function(){var t=localStorage.getItem("forteai-theme");if(t==="dark")document.documentElement.setAttribute("data-theme","dark");})();
+        (function(){var t=localStorage.getItem("sagedocs-theme");if(t==="dark")document.documentElement.setAttribute("data-theme","dark");})();
     </script>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;0,9..40,600;0,9..40,700;1,9..40,400&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="styles.css">
-    <script src="/widget/forteai-widget.js"></script>
+    <script src="/widget/sagedocs-widget.js"></script>
 </head>
 <body>
 
@@ -22,7 +22,7 @@
                 <span class="brand-icon">
                     <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><path d="M12 2L2 7l10 5 10-5-10-5z"/><path d="M2 17l10 5 10-5"/><path d="M2 12l10 5 10-5"/></svg>
                 </span>
-                ForteAI
+                SageDocs
             </h1>
         </div>
 
@@ -67,7 +67,7 @@
                 Logout
             </button>
         </div>
-        <div class="sidebar-footer">ForteAI v0.1.0</div>
+        <div class="sidebar-footer">SageDocs v0.1.0</div>
     </aside>
 
     <!-- CREATE TENANT MODAL -->
@@ -286,13 +286,13 @@
                 } else {
                     document.documentElement.removeAttribute("data-theme");
                 }
-                localStorage.setItem("forteai-theme", next);
+                localStorage.setItem("sagedocs-theme", next);
                 updateThemeUI(next);
             });
         });
 
         var API_BASE = window.location.origin;
-        var ADMIN_TOKEN = sessionStorage.getItem("forteai_admin_token");
+        var ADMIN_TOKEN = sessionStorage.getItem("sagedocs_admin_token");
 
         // ═══ AUTH CHECK ═══
         if (!ADMIN_TOKEN) {
@@ -302,11 +302,11 @@
                 headers: { "Authorization": "Bearer " + ADMIN_TOKEN }
             }).then(function (r) {
                 if (!r.ok) {
-                    sessionStorage.removeItem("forteai_admin_token");
+                    sessionStorage.removeItem("sagedocs_admin_token");
                     window.location.href = "/admin/login.html";
                 }
             }).catch(function () {
-                sessionStorage.removeItem("forteai_admin_token");
+                sessionStorage.removeItem("sagedocs_admin_token");
                 window.location.href = "/admin/login.html";
             });
         }
@@ -322,7 +322,7 @@
             opts.headers = authHeaders(opts.headers);
             return fetch(url, opts).then(function (r) {
                 if (r.status === 401) {
-                    sessionStorage.removeItem("forteai_admin_token");
+                    sessionStorage.removeItem("sagedocs_admin_token");
                     window.location.href = "/admin/login.html";
                 }
                 return r;
@@ -339,7 +339,7 @@
 
         // ═══ LOGOUT ═══
         document.getElementById("logoutBtn").addEventListener("click", function () {
-            sessionStorage.removeItem("forteai_admin_token");
+            sessionStorage.removeItem("sagedocs_admin_token");
             window.location.href = "/admin/login.html";
         });
 
@@ -644,10 +644,10 @@
                 });
         });
 
-        // ═══ TEST CHAT (mounts the embeddable ForteAI widget inline) ═══
+        // ═══ TEST CHAT (mounts the embeddable SageDocs widget inline) ═══
         function mountTestChat(tenant) {
-            if (!tenant || typeof ForteAI === "undefined") return;
-            ForteAI.init({
+            if (!tenant || typeof SageDocs === "undefined") return;
+            SageDocs.init({
                 tenant: tenant,
                 apiUrl: API_BASE,
                 inline: true,

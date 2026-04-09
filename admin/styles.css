@@ -1,5 +1,5 @@
 /* ═══════════════════════════════════════════
-   ForteAI Admin Dashboard — styles.css
+   SageDocs Admin Dashboard — styles.css
    ═══════════════════════════════════════════ */
 
 :root {
@@ -715,7 +715,7 @@ textarea.form-input {
     margin-top: 4px;
 }
 
-/* ═══════ TEST CHAT (hosts the embeddable ForteAI widget in inline mode) ═══════ */
+/* ═══════ TEST CHAT (hosts the embeddable SageDocs widget in inline mode) ═══════ */
 .chat-container {
     height: 600px;
     display: flex;

@@ -242,5 +242,5 @@
     - generic [ref=e652]: TurnCloud
     - generic [ref=e653]: 𝜋
   - text:                      
-  - button "Chat with ForteAI" [ref=e655] [cursor=pointer]:
+  - button "Chat with SageDocs" [ref=e655] [cursor=pointer]:
     - img [ref=e656]

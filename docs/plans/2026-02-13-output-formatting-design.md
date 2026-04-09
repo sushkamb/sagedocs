@@ -22,7 +22,7 @@ Help Mode responses suffer from:
 
 ### 2. Widget: CSS for markdown elements
 
-Add scoped CSS (`.forteai-msg-text` prefix) for:
+Add scoped CSS (`.sagedocs-msg-text` prefix) for:
 - Headings (h1–h4): scaled sizes, weight 600, margin-top
 - Tables: bordered cells, alternating row backgrounds, horizontal scroll
 - Blockquotes: left border accent (#0066cc), light background
@@ -30,7 +30,7 @@ Add scoped CSS (`.forteai-msg-text` prefix) for:
 - Horizontal rules: subtle divider
 - Nested lists: proper indentation
 
-Remove old custom list/code classes (`.forteai-list`, `.forteai-ul-item`, `.forteai-ol-item`) since marked.js outputs standard HTML elements.
+Remove old custom list/code classes (`.sagedocs-list`, `.sagedocs-ul-item`, `.sagedocs-ol-item`) since marked.js outputs standard HTML elements.
 
 ### 3. Widget: Collapsible sources
 
@@ -53,8 +53,8 @@ Update RAG system prompt rules to encourage structured markdown:
 
 | File | Change |
 |------|--------|
-| `widget/forteai-widget.js` | Replace `_formatMarkdown()`, add CDN loading, update `_addMessage()` for sources |
-| `widget/forteai-widget.css` | Add markdown element styles, remove old custom list/code classes |
+| `widget/sagedocs-widget.js` | Replace `_formatMarkdown()`, add CDN loading, update `_addMessage()` for sources |
+| `widget/sagedocs-widget.css` | Add markdown element styles, remove old custom list/code classes |
 | `backend/app/services/rag_engine.py` | Update system prompt rules (lines 185-196) |
 
 ## Dependencies

@@ -1,14 +1,14 @@
-# ForteAI Bot — Architecture & How It Works
+# SageDocs — Architecture & How It Works
 
 **Date:** 2026-02-11
 
-A complete technical reference for the ForteAI Bot project: what it is, how every piece fits together, and how data flows through the system.
+A complete technical reference for the SageDocs project: what it is, how every piece fits together, and how data flows through the system.
 
 ---
 
-## 1. What Is ForteAI?
+## 1. What Is SageDocs?
 
-ForteAI is a standalone, multi-tenant AI assistant that can be embedded into any web application with two lines of JavaScript. It provides two capabilities through a single chat widget:
+SageDocs is a standalone, multi-tenant AI assistant that can be embedded into any web application with two lines of JavaScript. It provides two capabilities through a single chat widget:
 
 - **Help Mode** — Answers "how do I..." questions using RAG (Retrieval-Augmented Generation) over uploaded documentation
 - **Data Mode** — Answers business/data questions by calling the host application's API via LLM function calling
@@ -26,14 +26,14 @@ The first integration target is **ChiroCloud**, but the architecture is applicat
  │              Host App (e.g., ChiroCloud)              │
  │                                                      │
  │   ┌──────────────────────────────────────────────┐   │
- │   │     <script src="forteai-widget.js">         │   │
- │   │     ForteAI.init({tenant, token, account})   │   │
+ │   │     <script src="sagedocs-widget.js">         │   │
+ │   │     SageDocs.init({tenant, token, account})   │   │
  │   └───────────────────┬──────────────────────────┘   │
  └───────────────────────┼──────────────────────────────┘
                          │ HTTP
                          ▼
  ┌──────────────────────────────────────────────────────┐
- │            ForteAI Service (FastAPI :8500)            │
+ │            SageDocs Service (FastAPI :8500)            │
  │                                                      │
  │  ┌────────────┐  ┌─────────────┐  ┌──────────────┐  │
  │  │ Chat Router │  │  Documents  │  │  Analytics   │  │
@@ -69,14 +69,14 @@ The first integration target is **ChiroCloud**, but the architecture is applicat
 | Embeddings | OpenAI `text-embedding-3-small` |
 | Chat Widget | Vanilla JS (zero framework dependencies) |
 | Admin Dashboard | HTML + vanilla JS |
-| Deployment | Docker on AWS EC2 |
+| Deployment | systemd + Apache on AWS Lightsail |
 
 ---
 
 ## 4. Project Structure
 
 ```
-forteaibot/
+sagedocs/
 ├── backend/
 │   ├── app/
 │   │   ├── main.py                  # FastAPI entry point, CORS, static mounts
@@ -101,10 +101,9 @@ forteaibot/
 │   ├── tools/
 │   │   └── chirocloud.yaml          # Tool definitions for ChiroCloud
 │   ├── requirements.txt
-│   └── Dockerfile
 ├── widget/
-│   ├── forteai-widget.js            # Embeddable chat widget
-│   └── forteai-widget.css           # Widget styles
+│   ├── sagedocs-widget.js            # Embeddable chat widget
+│   └── sagedocs-widget.css           # Widget styles
 ├── admin/
 │   ├── index.html                   # Admin dashboard (single-page)
 │   ├── login.html                   # Admin login page
@@ -122,16 +121,16 @@ forteaibot/
 
 ## 5. Multi-Tenancy Model
 
-ForteAI has **two levels** of tenancy:
+SageDocs has **two levels** of tenancy:
 
 | Level | Example | Purpose |
 |---|---|---|
-| **ForteAI Tenant** | `"chirocloud"` | Identifies which app — determines docs, tools, and settings |
+| **SageDocs Tenant** | `"chirocloud"` | Identifies which app — determines docs, tools, and settings |
 | **App Account** | `"clinic_001"` | Identifies which account within the app — scopes data queries |
 
 ### How It Works
 
-- **Help Mode** uses the ForteAI tenant only. All clinics using ChiroCloud share the same help documentation.
+- **Help Mode** uses the SageDocs tenant only. All clinics using ChiroCloud share the same help documentation.
 - **Data Mode** uses both. The account number is passed as a header to the host app's API, which handles its own schema/data routing.
 
 ### Data Isolation
@@ -139,7 +138,7 @@ ForteAI has **two levels** of tenancy:
 - ChromaDB collections are named `tenant_{tenant_id}` — no cross-tenant document leakage
 - Analytics are logged per tenant in separate JSONL files
 - Tool registries are loaded per tenant from separate YAML files
-- Host app data is scoped by the account number header — ForteAI never stores or caches it
+- Host app data is scoped by the account number header — SageDocs never stores or caches it
 
 ---
 
@@ -456,20 +455,20 @@ Parses uploaded files into chunks ready for embedding.
 
 ---
 
-## 11. Widget (`widget/forteai-widget.js`)
+## 11. Widget (`widget/sagedocs-widget.js`)
 
 ### Integration
 
 ```html
-<script src="https://forteai.yourdomain.com/widget/forteai-widget.js"></script>
+<script src="https://sagedocs.yourdomain.com/widget/sagedocs-widget.js"></script>
 <script>
-  ForteAI.init({
+  SageDocs.init({
     tenant: 'chirocloud',
     accountNumber: '12345',       // optional — enables data mode
     token: '{jwt}',               // optional — enables data mode
     theme: 'light',               // or 'dark'
     position: 'bottom-right',     // or 'bottom-left'
-    apiUrl: 'https://forteai.yourdomain.com'
+    apiUrl: 'https://sagedocs.yourdomain.com'
   });
 </script>
 ```
@@ -509,7 +508,7 @@ A single-page admin interface with four tabs:
 - Live chat interface against current indexed docs
 - Test answers before users see them
 - Shows sources and images in responses
-- Implementation note: this tab embeds the actual `forteai-widget.js` in **inline mode** (`ForteAI.init({ inline: true, target: '#testChatHost', ... })`) so admins see the exact rendering, markdown handling, and behavior end users will get. There is no separate admin chat code path.
+- Implementation note: this tab embeds the actual `sagedocs-widget.js` in **inline mode** (`SageDocs.init({ inline: true, target: '#testChatHost', ... })`) so admins see the exact rendering, markdown handling, and behavior end users will get. There is no separate admin chat code path.
 
 ### Analytics Tab
 - Total questions asked
@@ -560,7 +559,7 @@ JWT_SECRET=change-this-jwt-secret      # Secret for signing admin JWT tokens
 
 | URL Path | Serves |
 |---|---|
-| `/widget` | `forteai-widget.js` and `.css` |
+| `/widget` | `sagedocs-widget.js` and `.css` |
 | `/admin` | Admin dashboard HTML |
 | `/data/images` | Extracted images from documents |
 | `/docs` | Swagger API docs (auto-generated by FastAPI) |
@@ -571,7 +570,7 @@ JWT_SECRET=change-this-jwt-secret      # Secret for signing admin JWT tokens
 
 ### External Document Upload API
 
-ForteAI provides an authenticated external API (`POST /api/v1/documents/upload`) that allows external services to programmatically upload documents. Authentication uses per-tenant API keys.
+SageDocs provides an authenticated external API (`POST /api/v1/documents/upload`) that allows external services to programmatically upload documents. Authentication uses per-tenant API keys.
 
 **Generating an API key:**
 
@@ -612,10 +611,10 @@ The LLM **never generates SQL** and **never touches a database**. It can only ca
 
 ### JWT Passthrough
 
-ForteAI forwards the user's JWT and account number as HTTP headers to the host app. It never validates or decodes them — the host app is responsible for authentication and authorization.
+SageDocs forwards the user's JWT and account number as HTTP headers to the host app. It never validates or decodes them — the host app is responsible for authentication and authorization.
 
 ```
-Widget → ForteAI → Host App API
+Widget → SageDocs → Host App API
   token → passed through → validated here
   account_number → passed as header → used for schema routing
 ```
@@ -642,7 +641,7 @@ The `CORS_ORIGINS` environment variable restricts which domains can embed the wi
 
 - Help docs scoped per tenant in ChromaDB collections
 - Data queries scoped per account via host app headers
-- ForteAI never stores or caches host app data
+- SageDocs never stores or caches host app data
 
 ---
 
@@ -681,7 +680,7 @@ The `CORS_ORIGINS` environment variable restricts which domains can embed the wi
 
 ## 16. Adding a New Integration
 
-To connect ForteAI to a new host application:
+To connect SageDocs to a new host application:
 
 1. **Create a tenant** — via `POST /api/tenants/create` or the admin Settings tab
 2. **Upload help docs** — PDF, HTML, or Markdown via admin Documents tab
@@ -712,7 +711,7 @@ To connect ForteAI to a new host application:
 ```
 
 2. Build the corresponding read-only API endpoint in the host application
-3. Restart the ForteAI server (tool registries are loaded on startup)
+3. Restart the SageDocs server (tool registries are loaded on startup)
 4. Test by asking a natural language question that should trigger the new tool
 
 ---
@@ -727,7 +726,7 @@ To connect ForteAI to a new host application:
 | **Fast model for help mode** | Help answers are simpler; saves cost without quality loss |
 | **ChromaDB embedded** | No separate database server needed; persists to disk |
 | **Vanilla JS widget** | Zero framework dependency; embeds anywhere without conflicts |
-| **JWT passthrough** | ForteAI doesn't need to understand auth — host app handles it |
+| **JWT passthrough** | SageDocs doesn't need to understand auth — host app handles it |
 | **Per-tenant ChromaDB collections** | Clean isolation; easy to delete/rebuild per tenant |
 | **Image extraction + vision descriptions** | Screenshots in docs become searchable and referenceable in answers |
 | **Analytics logging** | Unanswered questions become the documentation roadmap |
@@ -754,8 +753,8 @@ To connect ForteAI to a new host application:
 | `backend/app/services/document_processor.py` | File parsing, image extraction, text chunking |
 | `backend/app/tools/registry.py` | Utility to load and validate YAML tool registries |
 | `backend/tools/chirocloud.yaml` | ChiroCloud tool definitions (8 tools) |
-| `widget/forteai-widget.js` | Embeddable chat widget with FAB, chat panel, markdown rendering. Supports floating mode (default) and `inline` mode for embedding inside a host element (used by the admin Test Chat). |
-| `widget/forteai-widget.css` | Widget styles, responsive layout, light/dark themes |
+| `widget/sagedocs-widget.js` | Embeddable chat widget with FAB, chat panel, markdown rendering. Supports floating mode (default) and `inline` mode for embedding inside a host element (used by the admin Test Chat). |
+| `widget/sagedocs-widget.css` | Widget styles, responsive layout, light/dark themes |
 | `admin/index.html` | Admin dashboard: docs, test chat, analytics, settings |
 | `admin/login.html` | Admin login page (username/password → JWT token) |
 | `admin/test-widget.html` | Standalone widget test page |

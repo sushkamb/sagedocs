@@ -103,7 +103,7 @@ class QueryEngine:
         base_url = base_url or registry.get("base_url", "")
 
         system_prompt = (
-            f"You are ForteAI, a data assistant for {tenant_display}. "
+            f"You are SageDocs, a data assistant for {tenant_display}. "
             "You help users retrieve and understand information from their application.\n\n"
             "## Instructions\n"
             "- Use the available tools to answer the user's question. Call multiple tools if needed.\n"

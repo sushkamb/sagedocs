@@ -1,14 +1,14 @@
 <!DOCTYPE html>
 <html>
-<head><title>ForteAI Widget Test</title></head>
+<head><title>SageDocs Widget Test</title></head>
 <body>
-  <h1>ForteAI Widget Test Page</h1>
+  <h1>SageDocs Widget Test Page</h1>
   <p>The chat widget should appear in the bottom-right corner.</p>
   <p><strong>Help mode:</strong> "How do I add a new patient?" or "How do I submit a claim?"</p>
   <p><strong>Data mode:</strong> "How many new patients this month?" or "What claims are past 90 days?"</p>
   <p id="status">Authenticating...</p>
 
-  <script src="http://localhost:8100/widget/forteai-widget.js"></script>
+  <script src="http://localhost:8100/widget/sagedocs-widget.js"></script>
   <script>
     // Authenticate to ChiroCloud to get a JWT for data mode
     fetch('https://localhost:44322/api/Users/authenticate', {
@@ -20,7 +20,7 @@
     .then(function(data) {
       var token = data.data.token;
       document.getElementById('status').textContent = 'Authenticated as ' + data.data.firstName + ' ' + data.data.lastName + ' — both help and data mode active.';
-      ForteAI.init({
+      SageDocs.init({
         tenant: 'chirocloud',
         accountNumber: '33850',
         token: token,
@@ -29,7 +29,7 @@
     })
     .catch(function() {
       document.getElementById('status').textContent = 'Auth failed — running in help-only mode.';
-      ForteAI.init({
+      SageDocs.init({
         tenant: 'chirocloud',
         apiUrl: 'http://localhost:8100'
       });

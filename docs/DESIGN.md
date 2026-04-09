@@ -1,4 +1,4 @@
-# ForteAI Bot — Design Document
+# SageDocs — Design Document
 
 **Date:** 2026-02-09
 **Status:** Draft
@@ -8,12 +8,12 @@
 
 ## 1. Overview
 
-ForteAI is a standalone, multi-tenant AI assistant product that provides two capabilities:
+SageDocs is a standalone, multi-tenant AI assistant product that provides two capabilities:
 
 1. **Help Mode** — Answers "how do I..." questions using RAG over uploaded documentation
 2. **Data Mode** — Answers business/data questions by calling the host application's API via LLM function calling
 
-ForteAI is designed to be application-agnostic. Any application can integrate it by embedding a JS widget and configuring a tenant. The first integration target is **ChiroCloud**.
+SageDocs is designed to be application-agnostic. Any application can integrate it by embedding a JS widget and configuring a tenant. The first integration target is **ChiroCloud**.
 
 ---
 
@@ -22,7 +22,7 @@ ForteAI is designed to be application-agnostic. Any application can integrate it
 - Reduce support burden by letting users self-serve "how do I..." questions
 - Give front desk/admin staff conversational access to clinic data
 - Build once, reuse across multiple Forte applications
-- Keep ForteAI completely separate from host application codebases
+- Keep SageDocs completely separate from host application codebases
 
 ---
 
@@ -35,7 +35,7 @@ ForteAI is designed to be application-agnostic. Any application can integrate it
 │              Host App (ChiroCloud)           │
 │                                             │
 │   ┌───────────────────────────────────┐     │
-│   │  ForteAI Widget  (JS snippet)     │     │
+│   │  SageDocs Widget  (JS snippet)     │     │
 │   │  - Chat UI                        │     │
 │   │  - Passes tenant ID + JWT         │     │
 │   └──────────────┬────────────────────┘     │
@@ -43,7 +43,7 @@ ForteAI is designed to be application-agnostic. Any application can integrate it
                    │
                    ▼
 ┌─────────────────────────────────────────────┐
-│         ForteAI Service (FastAPI)           │
+│         SageDocs Service (FastAPI)           │
 │                                             │
 │  ┌─────────────┐    ┌──────────────────┐   │
 │  │  RAG Engine  │    │  Query Engine    │   │
@@ -84,16 +84,16 @@ ForteAI is designed to be application-agnostic. Any application can integrate it
 | Embeddings | OpenAI text-embedding-3-small |
 | Chat Widget | Vanilla JS (no framework dependency) |
 | Admin Dashboard | HTML + minimal JS (or React if needed later) |
-| Deployment | Docker container on AWS EC2 |
+| Deployment | systemd + Apache on AWS Lightsail |
 
 ### 3.3 Multi-Tenancy Model
 
 Two levels of tenancy:
 
-1. **ForteAI Tenant** — Which application (e.g., `chirocloud`, `turncloud`, future apps)
+1. **SageDocs Tenant** — Which application (e.g., `chirocloud`, `turncloud`, future apps)
 2. **App-Level Tenant** — Which account within that application (e.g., ChiroCloud clinic account number)
 
-**Help Mode** uses ForteAI tenant only — all clinics using ChiroCloud share the same help docs.
+**Help Mode** uses SageDocs tenant only — all clinics using ChiroCloud share the same help docs.
 
 **Data Mode** uses both — the account number is passed to the host app's API, which handles its own schema/data routing.
 
@@ -103,7 +103,7 @@ Two levels of tenancy:
 
 ### 4.1 Document Ingestion Pipeline
 
-1. Admin uploads a file (PDF, HTML, or Markdown) via the dashboard, tagged to a ForteAI tenant
+1. Admin uploads a file (PDF, HTML, or Markdown) via the dashboard, tagged to a SageDocs tenant
 2. **Chunking** — File is split into overlapping chunks (~500-800 tokens each)
 3. **Embedding** — Each chunk is converted to a vector using the embedding model
 4. **Storage** — Chunks + vectors stored in ChromaDB under the tenant's collection
@@ -112,7 +112,7 @@ Two levels of tenancy:
 ### 4.2 Query Pipeline (RAG)
 
 1. User types a question in the widget
-2. Widget sends the question + tenant ID to the ForteAI API
+2. Widget sends the question + tenant ID to the SageDocs API
 3. Question is embedded using the same embedding model
 4. ChromaDB returns the top 3-5 most relevant chunks from that tenant's collection
 5. Retrieved chunks are injected into an LLM prompt:
@@ -133,7 +133,7 @@ When a document is re-uploaded:
 
 ### 5.1 Tool Registry
 
-A YAML configuration file defines available data tools per ForteAI tenant. The LLM sees these as callable functions.
+A YAML configuration file defines available data tools per SageDocs tenant. The LLM sees these as callable functions.
 
 Example (`tools/chirocloud.yaml`):
 
@@ -187,10 +187,10 @@ tools:
 ### 5.2 Query Flow
 
 1. User types: "How many new patients this month?"
-2. Widget sends question + tenant ID + account number + JWT to ForteAI API
+2. Widget sends question + tenant ID + account number + JWT to SageDocs API
 3. LLM sees the question + tool catalog
 4. LLM selects `get_patient_count` with parameters `{ date_from: "2026-02-01", date_to: "2026-02-09", status: "new" }`
-5. ForteAI calls ChiroCloud API at `/api/assistant/patients/count` with the user's JWT and account number
+5. SageDocs calls ChiroCloud API at `/api/assistant/patients/count` with the user's JWT and account number
 6. ChiroCloud API handles tenant scoping (schema routing via account number) and returns `{ count: 14 }`
 7. LLM responds: "You've had 14 new patients so far in February."
 
@@ -214,7 +214,7 @@ tools:
 - **JWT passthrough** — All data requests use the user's existing auth token
 - **Account number scoping** — Every data-mode API call includes the account number; ChiroCloud's API handles schema routing
 - **Read-only endpoints** — The `/api/assistant/*` endpoints in ChiroCloud are strictly GET/read-only
-- **No cross-tenant data leakage** — ForteAI never stores or caches host app data
+- **No cross-tenant data leakage** — SageDocs never stores or caches host app data
 - **API key authentication** — External document upload API uses per-tenant API keys (SHA-256 hashed, `fai_` prefix). Tenant is derived from the key so callers cannot upload to other tenants.
 - **Admin JWT authentication** — Admin endpoints (document management, tenant creation, API key generation, analytics) require a Bearer token obtained via `POST /api/admin/login`
 
@@ -227,9 +227,9 @@ tools:
 Two lines in any host app:
 
 ```html
-<script src="https://forteai.yourdomain.com/widget/forteai-widget.js"></script>
+<script src="https://sagedocs.yourdomain.com/widget/sagedocs-widget.js"></script>
 <script>
-  ForteAI.init({
+  SageDocs.init({
     tenant: 'chirocloud',
     accountNumber: '12345',
     token: '{jwt}',

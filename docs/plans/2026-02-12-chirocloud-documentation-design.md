@@ -2,12 +2,12 @@
 
 ## Goal
 
-Systematically create markdown help documentation for ChiroCloud (TurnCloud) that the ForteAI bot can ingest via RAG to answer user questions. Start with core modules, expand later.
+Systematically create markdown help documentation for ChiroCloud (TurnCloud) that the SageDocs can ingest via RAG to answer user questions. Start with core modules, expand later.
 
 ## Current State
 
 - One small help file exists: `backend/uploads/chirocloud/chirocloud-help.md` (47 lines, 5 topics)
-- ForteAI RAG pipeline already supports markdown ingestion with chunking and semantic search
+- SageDocs RAG pipeline already supports markdown ingestion with chunking and semantic search
 - Analytics show 31 logged questions, many unanswered — indicating documentation gaps
 - ChiroCloud is a full chiropractic practice management system with 25+ sub-modules
 
@@ -52,7 +52,7 @@ Each agent reads captured snapshots and writes polished markdown documentation f
 ### Phase 3: Review & Upload (Sequential)
 
 1. Review all generated docs for accuracy and consistency
-2. Upload each markdown file to ForteAI via `POST /api/documents/upload`
+2. Upload each markdown file to SageDocs via `POST /api/documents/upload`
 3. Verify RAG retrieval quality with test questions from the analytics log
 
 ## Documentation Template
@@ -126,7 +126,7 @@ Four files rather than 8+ individual ones. Larger documents chunk better for RAG
 
 ## Success Criteria
 
-1. ForteAI can answer the previously unanswered questions from analytics
+1. SageDocs can answer the previously unanswered questions from analytics
 2. Each core module has step-by-step task documentation
 3. Documentation uses exact UI labels from the live app
 4. RAG retrieval returns relevant chunks for common user questions

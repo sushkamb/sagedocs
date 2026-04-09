@@ -1,4 +1,4 @@
-"""Mock ChiroCloud API server for testing ForteAI Data Mode.
+"""Mock ChiroCloud API server for testing SageDocs Data Mode.
 Simulates the /api/Assistant/* endpoints that ChiroCloud would provide."""
 
 from fastapi import FastAPI, Header

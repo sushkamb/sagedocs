@@ -1,6 +1,6 @@
-/* ForteAI Chat Widget Styles */
+/* SageDocs Chat Widget Styles */
 
-.forteai-container {
+.sagedocs-container {
     position: fixed;
     z-index: 99999;
     bottom: 20px;
@@ -8,16 +8,16 @@
     font-size: 14px;
 }
 
-.forteai-right {
+.sagedocs-right {
     right: 20px;
 }
 
-.forteai-left {
+.sagedocs-left {
     left: 20px;
 }
 
 /* Inline mode — render inside a host element instead of floating */
-.forteai-container.forteai-inline {
+.sagedocs-container.sagedocs-inline {
     position: static;
     bottom: auto;
     right: auto;
@@ -28,7 +28,7 @@
     display: flex;
 }
 
-.forteai-container.forteai-inline .forteai-chat-panel {
+.sagedocs-container.sagedocs-inline .sagedocs-chat-panel {
     width: 100%;
     height: 100%;
     border-radius: 0;
@@ -36,7 +36,7 @@
 }
 
 /* Floating Action Button */
-.forteai-fab {
+.sagedocs-fab {
     width: 56px;
     height: 56px;
     border-radius: 50%;
@@ -51,13 +51,13 @@
     transition: transform 0.2s, box-shadow 0.2s;
 }
 
-.forteai-fab:hover {
+.sagedocs-fab:hover {
     transform: scale(1.05);
     box-shadow: 0 6px 16px rgba(0, 0, 0, 0.25);
 }
 
 /* Chat Panel */
-.forteai-chat-panel {
+.sagedocs-chat-panel {
     width: 380px;
     height: 520px;
     background: #fff;
@@ -70,7 +70,7 @@
 }
 
 /* Resize Handle */
-.forteai-resize-handle {
+.sagedocs-resize-handle {
     position: absolute;
     top: 0;
     width: 20px;
@@ -79,17 +79,17 @@
     z-index: 10;
 }
 
-.forteai-right .forteai-resize-handle {
+.sagedocs-right .sagedocs-resize-handle {
     left: 0;
     cursor: nw-resize;
 }
 
-.forteai-left .forteai-resize-handle {
+.sagedocs-left .sagedocs-resize-handle {
     right: 0;
     cursor: ne-resize;
 }
 
-.forteai-resize-handle::after {
+.sagedocs-resize-handle::after {
     content: "";
     position: absolute;
     top: 4px;
@@ -98,18 +98,18 @@
     border-top: 2px solid rgba(255, 255, 255, 0.6);
 }
 
-.forteai-right .forteai-resize-handle::after {
+.sagedocs-right .sagedocs-resize-handle::after {
     left: 4px;
     border-left: 2px solid rgba(255, 255, 255, 0.6);
 }
 
-.forteai-left .forteai-resize-handle::after {
+.sagedocs-left .sagedocs-resize-handle::after {
     right: 4px;
     border-right: 2px solid rgba(255, 255, 255, 0.6);
 }
 
 /* Header */
-.forteai-header {
+.sagedocs-header {
     background: #0066cc;
     color: #fff;
     padding: 14px 16px;
@@ -119,12 +119,12 @@
     flex-shrink: 0;
 }
 
-.forteai-title {
+.sagedocs-title {
     font-weight: 600;
     font-size: 15px;
 }
 
-.forteai-close {
+.sagedocs-close {
     background: none;
     border: none;
     color: #fff;
@@ -135,12 +135,12 @@
     opacity: 0.8;
 }
 
-.forteai-close:hover {
+.sagedocs-close:hover {
     opacity: 1;
 }
 
 /* Messages */
-.forteai-messages {
+.sagedocs-messages {
     flex: 1;
     overflow-y: auto;
     padding: 16px;
@@ -149,50 +149,50 @@
     gap: 12px;
 }
 
-.forteai-msg {
+.sagedocs-msg {
     max-width: 85%;
-    animation: forteai-fade-in 0.2s ease-out;
+    animation: sagedocs-fade-in 0.2s ease-out;
 }
 
-.forteai-msg-user {
+.sagedocs-msg-user {
     align-self: flex-end;
 }
 
-.forteai-msg-assistant {
+.sagedocs-msg-assistant {
     align-self: flex-start;
 }
 
-.forteai-msg-text {
+.sagedocs-msg-text {
     padding: 10px 14px;
     border-radius: 12px;
     line-height: 1.5;
     word-wrap: break-word;
 }
 
-.forteai-msg-user .forteai-msg-text {
+.sagedocs-msg-user .sagedocs-msg-text {
     background: #0066cc;
     color: #fff;
     border-bottom-right-radius: 4px;
 }
 
-.forteai-msg-assistant .forteai-msg-text {
+.sagedocs-msg-assistant .sagedocs-msg-text {
     background: #f0f0f0;
     color: #333;
     border-bottom-left-radius: 4px;
 }
 
 /* Collapsible Sources */
-.forteai-msg-sources {
+.sagedocs-msg-sources {
     margin-top: 6px;
     padding-left: 4px;
 }
 
-.forteai-msg-sources details {
+.sagedocs-msg-sources details {
     font-size: 12px;
     color: #666;
 }
 
-.forteai-msg-sources summary {
+.sagedocs-msg-sources summary {
     cursor: pointer;
     user-select: none;
     font-weight: 500;
@@ -200,30 +200,30 @@
     list-style: none;
 }
 
-.forteai-msg-sources summary::-webkit-details-marker {
+.sagedocs-msg-sources summary::-webkit-details-marker {
     display: none;
 }
 
-.forteai-msg-sources summary::after {
+.sagedocs-msg-sources summary::after {
     content: " \25B8";
 }
 
-.forteai-msg-sources details[open] summary::after {
+.sagedocs-msg-sources details[open] summary::after {
     content: " \25BE";
 }
 
-.forteai-sources-icon {
+.sagedocs-sources-icon {
     font-size: 13px;
 }
 
-.forteai-sources-list {
+.sagedocs-sources-list {
     display: flex;
     flex-wrap: wrap;
     gap: 4px;
     padding: 6px 0 2px 0;
 }
 
-.forteai-source-pill {
+.sagedocs-source-pill {
     background: #e8f0fe;
     color: #0066cc;
     border-radius: 12px;
@@ -233,14 +233,14 @@
 }
 
 /* Starter Questions */
-.forteai-starters {
+.sagedocs-starters {
     display: flex;
     flex-wrap: wrap;
     gap: 6px;
     padding: 4px 0;
 }
 
-.forteai-starter-btn {
+.sagedocs-starter-btn {
     background: #e8f0fe;
     color: #0066cc;
     border: 1px solid #c4d9f2;
@@ -251,35 +251,35 @@
     transition: background 0.2s;
 }
 
-.forteai-starter-btn:hover {
+.sagedocs-starter-btn:hover {
     background: #d0e2f7;
 }
 
 /* Typing Indicator */
-.forteai-typing .forteai-msg-text {
+.sagedocs-typing .sagedocs-msg-text {
     display: flex;
     gap: 4px;
     padding: 12px 18px;
 }
 
-.forteai-dot {
+.sagedocs-dot {
     width: 8px;
     height: 8px;
     border-radius: 50%;
     background: #999;
-    animation: forteai-bounce 1.4s infinite;
+    animation: sagedocs-bounce 1.4s infinite;
 }
 
-.forteai-dot:nth-child(2) {
+.sagedocs-dot:nth-child(2) {
     animation-delay: 0.2s;
 }
 
-.forteai-dot:nth-child(3) {
+.sagedocs-dot:nth-child(3) {
     animation-delay: 0.4s;
 }
 
 /* Input Area */
-.forteai-input-area {
+.sagedocs-input-area {
     display: flex;
     padding: 12px;
     border-top: 1px solid #eee;
@@ -287,7 +287,7 @@
     flex-shrink: 0;
 }
 
-.forteai-input-area input {
+.sagedocs-input-area input {
     flex: 1;
     border: 1px solid #ddd;
     border-radius: 8px;
@@ -297,11 +297,11 @@
     font-family: inherit;
 }
 
-.forteai-input-area input:focus {
+.sagedocs-input-area input:focus {
     border-color: #0066cc;
 }
 
-.forteai-input-area button {
+.sagedocs-input-area button {
     background: #0066cc;
     color: #fff;
     border: none;
@@ -312,12 +312,12 @@
     transition: background 0.2s;
 }
 
-.forteai-input-area button:hover {
+.sagedocs-input-area button:hover {
     background: #0052a3;
 }
 
 /* Animations */
-@keyframes forteai-fade-in {
+@keyframes sagedocs-fade-in {
     from {
         opacity: 0;
         transform: translateY(8px);
@@ -328,7 +328,7 @@
     }
 }
 
-@keyframes forteai-bounce {
+@keyframes sagedocs-bounce {
     0%, 60%, 100% {
         transform: translateY(0);
     }
@@ -338,14 +338,14 @@
 }
 
 /* Message Images */
-.forteai-msg-images {
+.sagedocs-msg-images {
     display: flex;
     flex-wrap: wrap;
     gap: 6px;
     margin-top: 8px;
 }
 
-.forteai-msg-img {
+.sagedocs-msg-img {
     max-width: 100%;
     max-height: 180px;
     border-radius: 8px;
@@ -354,12 +354,12 @@
     transition: opacity 0.2s;
 }
 
-.forteai-msg-img:hover {
+.sagedocs-msg-img:hover {
     opacity: 0.85;
 }
 
 /* Image Modal Overlay */
-.forteai-img-overlay {
+.sagedocs-img-overlay {
     position: fixed;
     top: 0;
     left: 0;
@@ -373,7 +373,7 @@
     cursor: pointer;
 }
 
-.forteai-img-full {
+.sagedocs-img-full {
     max-width: 90%;
     max-height: 90%;
     border-radius: 8px;
@@ -381,58 +381,58 @@
 }
 
 /* Formatted Message Content — Markdown Elements */
-.forteai-msg-text p {
+.sagedocs-msg-text p {
     margin: 0 0 8px 0;
 }
 
-.forteai-msg-text p:last-child {
+.sagedocs-msg-text p:last-child {
     margin-bottom: 0;
 }
 
-.forteai-msg-text strong {
+.sagedocs-msg-text strong {
     font-weight: 600;
 }
 
 /* Headings */
-.forteai-msg-text h1,
-.forteai-msg-text h2,
-.forteai-msg-text h3,
-.forteai-msg-text h4 {
+.sagedocs-msg-text h1,
+.sagedocs-msg-text h2,
+.sagedocs-msg-text h3,
+.sagedocs-msg-text h4 {
     font-weight: 600;
     margin: 12px 0 6px 0;
     line-height: 1.3;
 }
 
-.forteai-msg-text h1 { font-size: 1.2em; }
-.forteai-msg-text h2 { font-size: 1.1em; }
-.forteai-msg-text h3 { font-size: 1.05em; }
-.forteai-msg-text h4 { font-size: 1em; }
+.sagedocs-msg-text h1 { font-size: 1.2em; }
+.sagedocs-msg-text h2 { font-size: 1.1em; }
+.sagedocs-msg-text h3 { font-size: 1.05em; }
+.sagedocs-msg-text h4 { font-size: 1em; }
 
-.forteai-msg-text h1:first-child,
-.forteai-msg-text h2:first-child,
-.forteai-msg-text h3:first-child,
-.forteai-msg-text h4:first-child {
+.sagedocs-msg-text h1:first-child,
+.sagedocs-msg-text h2:first-child,
+.sagedocs-msg-text h3:first-child,
+.sagedocs-msg-text h4:first-child {
     margin-top: 0;
 }
 
 /* Lists */
-.forteai-msg-text ul,
-.forteai-msg-text ol {
+.sagedocs-msg-text ul,
+.sagedocs-msg-text ol {
     margin: 6px 0;
     padding-left: 20px;
 }
 
-.forteai-msg-text li {
+.sagedocs-msg-text li {
     margin-bottom: 4px;
 }
 
-.forteai-msg-text li > ul,
-.forteai-msg-text li > ol {
+.sagedocs-msg-text li > ul,
+.sagedocs-msg-text li > ol {
     margin: 2px 0;
 }
 
 /* Code */
-.forteai-msg-text pre {
+.sagedocs-msg-text pre {
     background: rgba(0, 0, 0, 0.06);
     border-radius: 6px;
     padding: 8px 10px;
@@ -443,7 +443,7 @@
     white-space: pre-wrap;
 }
 
-.forteai-msg-text code {
+.sagedocs-msg-text code {
     background: rgba(0, 0, 0, 0.06);
     border-radius: 3px;
     padding: 1px 5px;
@@ -451,14 +451,14 @@
     font-size: 12px;
 }
 
-.forteai-msg-text pre code {
+.sagedocs-msg-text pre code {
     background: none;
     padding: 0;
     border-radius: 0;
 }
 
 /* Tables */
-.forteai-msg-text table {
+.sagedocs-msg-text table {
     border-collapse: collapse;
     width: 100%;
     margin: 8px 0;
@@ -467,24 +467,24 @@
     overflow-x: auto;
 }
 
-.forteai-msg-text th,
-.forteai-msg-text td {
+.sagedocs-msg-text th,
+.sagedocs-msg-text td {
     border: 1px solid rgba(0, 0, 0, 0.12);
     padding: 6px 10px;
     text-align: left;
 }
 
-.forteai-msg-text th {
+.sagedocs-msg-text th {
     background: rgba(0, 0, 0, 0.04);
     font-weight: 600;
 }
 
-.forteai-msg-text tr:nth-child(even) {
+.sagedocs-msg-text tr:nth-child(even) {
     background: rgba(0, 0, 0, 0.02);
 }
 
 /* Blockquotes */
-.forteai-msg-text blockquote {
+.sagedocs-msg-text blockquote {
     border-left: 3px solid #0066cc;
     background: rgba(0, 102, 204, 0.05);
     margin: 8px 0;
@@ -492,22 +492,22 @@
     color: #555;
 }
 
-.forteai-msg-text blockquote p {
+.sagedocs-msg-text blockquote p {
     margin: 0;
 }
 
 /* Links */
-.forteai-msg-text a {
+.sagedocs-msg-text a {
     color: #0066cc;
     text-decoration: none;
 }
 
-.forteai-msg-text a:hover {
+.sagedocs-msg-text a:hover {
     text-decoration: underline;
 }
 
 /* Horizontal Rules */
-.forteai-msg-text hr {
+.sagedocs-msg-text hr {
     border: none;
     border-top: 1px solid rgba(0, 0, 0, 0.1);
     margin: 10px 0;
@@ -515,7 +515,7 @@
 
 /* Responsive */
 @media (max-width: 480px) {
-    .forteai-chat-panel {
+    .sagedocs-chat-panel {
         width: calc(100vw - 40px);
         height: calc(100vh - 100px);
     }

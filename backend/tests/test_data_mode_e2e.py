@@ -1,8 +1,8 @@
-"""End-to-end test for ForteAI Data Mode (Phase 2).
+"""End-to-end test for SageDocs Data Mode (Phase 2).
 
 Requires:
   1. Mock ChiroCloud running on port 8200:  python tests/mock_chirocloud.py
-  2. ForteAI backend running on port 8500:  uvicorn app.main:app --port 8500
+  2. SageDocs backend running on port 8500:  uvicorn app.main:app --port 8500
 
 Runs a battery of natural-language questions through /api/chat/data and
 validates the full pipeline: LLM tool selection → API call → response formatting.
@@ -96,19 +96,19 @@ async def test_data_endpoint(question: str, expected_tool: str, desc: str, clien
 
 async def run_tests():
     print("=" * 70)
-    print("ForteAI Data Mode — End-to-End Test")
+    print("SageDocs Data Mode — End-to-End Test")
     print("=" * 70)
 
-    # Pre-check: is ForteAI running?
+    # Pre-check: is SageDocs running?
     async with httpx.AsyncClient() as client:
         try:
             r = await client.get(f"{API_BASE}/health", timeout=5.0)
             if r.status_code != 200:
-                print(f"\nERROR: ForteAI not healthy at {API_BASE}")
+                print(f"\nERROR: SageDocs not healthy at {API_BASE}")
                 sys.exit(1)
-            print(f"\nForteAI backend: OK ({API_BASE})")
+            print(f"\nSageDocs backend: OK ({API_BASE})")
         except Exception:
-            print(f"\nERROR: Cannot reach ForteAI at {API_BASE}")
+            print(f"\nERROR: Cannot reach SageDocs at {API_BASE}")
             print("Start it with: uvicorn app.main:app --port 8500")
             sys.exit(1)
 

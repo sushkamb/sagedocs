@@ -1,0 +1,25 @@
+name: Deploy to production
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+concurrency:
+  group: deploy-production
+  cancel-in-progress: false
+
+jobs:
+  deploy:
+    runs-on: [self-hosted, sagedocs]
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Run deploy script
+        env:
+          SRC_DIR: ${{ github.workspace }}
+        run: sudo -E bash scripts/deploy.sh --update
+
+      - name: Health check
+        run: curl -sf http://127.0.0.1:8100/health

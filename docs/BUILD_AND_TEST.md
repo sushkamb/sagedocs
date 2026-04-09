@@ -1,6 +1,6 @@
 # Build and Test Guide
 
-Step-by-step instructions for setting up, running, testing, and deploying ForteAI Bot.
+Step-by-step instructions for setting up, running, testing, and deploying SageDocs.
 
 ---
 
@@ -9,7 +9,6 @@ Step-by-step instructions for setting up, running, testing, and deploying ForteA
 - **Python 3.11+** — [Download](https://www.python.org/downloads/)
 - **pip** — Comes with Python
 - **Git** — For version control
-- **Docker** (optional) — For containerized deployment
 - **An LLM API key** — OpenAI (recommended) or Anthropic
 
 Verify your Python version:
@@ -27,7 +26,7 @@ python3 --version
 
 ```bash
 git clone <repo-url>
-cd forteaibot/backend
+cd sagedocs/backend
 
 # Create a virtual environment
 python3 -m venv venv
@@ -77,7 +76,7 @@ INFO:     Started reloader process
 
 ### 2.4 Verify
 
-- Open http://localhost:8500 — Should return `{"name":"ForteAI Bot","version":"0.1.0","status":"running","docs":"/docs"}`
+- Open http://localhost:8500 — Should return `{"name":"SageDocs","version":"0.1.0","status":"running","docs":"/docs"}`
 - Open http://localhost:8500/docs — Swagger UI with all API endpoints
 - Open http://localhost:8500/admin — Admin dashboard
 
@@ -258,12 +257,12 @@ Create a file anywhere on your machine:
 <html>
 <head><title>Widget Test</title></head>
 <body>
-  <h1>ForteAI Widget Test Page</h1>
+  <h1>SageDocs Widget Test Page</h1>
   <p>The chat widget should appear in the bottom-right corner.</p>
 
-  <script src="http://localhost:8500/widget/forteai-widget.js"></script>
+  <script src="http://localhost:8500/widget/sagedocs-widget.js"></script>
   <script>
-    ForteAI.init({
+    SageDocs.init({
       tenant: 'chirocloud',
       apiUrl: 'http://localhost:8500'
     });
@@ -341,79 +340,11 @@ You can test all endpoints directly from the Swagger UI without needing curl.
 
 ---
 
-## 8. Running with Docker
+## 8. Deploying to Production
 
-### 8.1 Build the Image
+For production deployment (systemd + Apache on AWS Lightsail) and CI/CD setup with a self-hosted GitHub Actions runner, see [`docs/DEPLOYMENT.md`](DEPLOYMENT.md).
 
-```bash
-cd backend
-docker build -t forteai .
-```
-
-### 8.2 Run the Container
-
-```bash
-docker run -d \
-  --name forteai \
-  -p 8500:8500 \
-  --env-file ../.env \
-  -v forteai-data:/app/data \
-  forteai
-```
-
-The `-v forteai-data:/app/data` flag persists ChromaDB data and tenant configs across container restarts.
-
-### 8.3 Verify
-
-```bash
-curl http://localhost:8500/health
-# {"status":"healthy"}
-```
-
-### 8.4 View Logs
-
-```bash
-docker logs -f forteai
-```
-
----
-
-## 9. Deploying to AWS EC2
-
-### 9.1 Prepare the Server
-
-```bash
-# Install Docker on Amazon Linux 2
-sudo yum update -y
-sudo yum install -y docker
-sudo service docker start
-sudo usermod -aG docker ec2-user
-```
-
-### 9.2 Deploy
-
-```bash
-# Transfer the code to the server (or pull from git)
-git clone <repo-url>
-cd forteaibot
-
-# Create .env with production settings
-cp .env.example .env
-# Edit .env: set CORS_ORIGINS to your app's domain, set API keys
-
-# Build and run
-cd backend
-docker build -t forteai .
-docker run -d \
-  --name forteai \
-  -p 8500:8500 \
-  --restart unless-stopped \
-  --env-file ../.env \
-  -v forteai-data:/app/data \
-  forteai
-```
-
-### 9.3 Security Checklist
+### Security Checklist
 
 - [ ] Set `CORS_ORIGINS` to only your app's domain(s)
 - [ ] Set a strong `ADMIN_SECRET_KEY` (protects external API key generation)
@@ -426,7 +357,7 @@ docker run -d \
 
 ---
 
-## 10. Troubleshooting
+## 9. Troubleshooting
 
 ### Server won't start
 
@@ -452,7 +383,7 @@ chmod 755 data/chroma
 
 - Check browser console for CORS errors
 - Ensure `CORS_ORIGINS` in `.env` includes the page's origin
-- Verify the ForteAI server is running and accessible from the browser
+- Verify the SageDocs server is running and accessible from the browser
 
 ### Chat returns "I don't have any documentation"
 
@@ -472,17 +403,9 @@ If you see `"All candidates filtered out"`, lower `SIMILARITY_THRESHOLD` in `.en
 
 If you see `"Very little text extracted"` during document upload, the file may not contain parseable text content.
 
-### Docker container exits immediately
-
-```bash
-docker logs forteai
-```
-
-Common cause: missing `.env` file or invalid API key.
-
 ---
 
-## 11. Development Workflow
+## 10. Development Workflow
 
 ### Adding Help Content
 
@@ -510,7 +433,7 @@ Common cause: missing `.env` file or invalid API key.
 ```
 
 2. Build the corresponding read-only API endpoint in the host application
-3. Restart the ForteAI server (it loads tool registries on startup)
+3. Restart the SageDocs server (it loads tool registries on startup)
 4. Test via the data mode chat endpoint
 
 ### Adding a New Tenant (Application)

@@ -1,11 +1,11 @@
-# ForteAI Bot
+# SageDocs
 
-A standalone, multi-tenant AI assistant that can be embedded into any web application. ForteAI provides two capabilities through a single chat widget:
+A standalone, multi-tenant AI assistant that can be embedded into any web application. SageDocs provides two capabilities through a single chat widget:
 
 - **Help Mode** — Answers "how do I..." questions by searching uploaded documentation (RAG)
 - **Data Mode** — Answers business questions by querying the host application's API (LLM function calling)
 
-ForteAI is application-agnostic. Any app can integrate it by embedding a small JS widget and configuring a tenant. The first integration target is [ChiroCloud](https://chirocloud.com).
+SageDocs is application-agnostic. Any app can integrate it by embedding a small JS widget and configuring a tenant. The first integration target is [ChiroCloud](https://chirocloud.com).
 
 ## How It Works
 
@@ -14,13 +14,13 @@ ForteAI is application-agnostic. Any app can integrate it by embedding a small J
 │         Host Application         │
 │                                  │
 │   ┌──────────────────────────┐   │
-│   │   ForteAI Chat Widget    │   │
+│   │   SageDocs Chat Widget    │   │
 │   └────────────┬─────────────┘   │
 └────────────────┼─────────────────┘
                  │
                  ▼
 ┌──────────────────────────────────┐
-│      ForteAI Service (API)       │
+│      SageDocs Service (API)       │
 │                                  │
 │   Help Mode        Data Mode     │
 │   (RAG +           (Function     │
@@ -34,9 +34,9 @@ ForteAI is application-agnostic. Any app can integrate it by embedding a small J
                Host Application API
 ```
 
-**Help Mode:** User asks "How do I submit a claim?" — ForteAI searches the uploaded documentation and generates an answer with source references.
+**Help Mode:** User asks "How do I submit a claim?" — SageDocs searches the uploaded documentation and generates an answer with source references.
 
-**Data Mode:** User asks "How many new patients this month?" — ForteAI calls the host app's API using function calling and presents the results in natural language.
+**Data Mode:** User asks "How many new patients this month?" — SageDocs calls the host app's API using function calling and presents the results in natural language.
 
 ## Tech Stack
 
@@ -48,7 +48,7 @@ ForteAI is application-agnostic. Any app can integrate it by embedding a small J
 | Embeddings | OpenAI text-embedding-3-small |
 | Chat Widget | Vanilla JavaScript |
 | Admin Dashboard | HTML + vanilla JS |
-| Deployment | Docker on AWS EC2 |
+| Deployment | systemd + Apache on AWS Lightsail |
 
 ## Quick Start
 
@@ -62,7 +62,7 @@ ForteAI is application-agnostic. Any app can integrate it by embedding a small J
 ```bash
 # Clone the repo
 git clone <repo-url>
-cd forteaibot
+cd sagedocs
 
 # Create virtual environment
 cd backend
@@ -92,9 +92,9 @@ uvicorn app.main:app --reload --port 8500
 Add two lines to any web page:
 
 ```html
-<script src="http://localhost:8500/widget/forteai-widget.js"></script>
+<script src="http://localhost:8500/widget/sagedocs-widget.js"></script>
 <script>
-  ForteAI.init({
+  SageDocs.init({
     tenant: 'chirocloud',
     accountNumber: '12345',       // optional — enables data mode
     token: 'user-jwt-token',      // optional — enables data mode
@@ -105,7 +105,7 @@ Add two lines to any web page:
 ## Project Structure
 
 ```
-forteaibot/
+sagedocs/
 ├── backend/
 │   ├── app/
 │   │   ├── main.py                 # FastAPI entry point
@@ -128,10 +128,9 @@ forteaibot/
 │   ├── tools/
 │   │   └── chirocloud.yaml         # ChiroCloud data query tool definitions
 │   ├── requirements.txt
-│   └── Dockerfile
 ├── widget/
-│   ├── forteai-widget.js           # Embeddable chat widget
-│   └── forteai-widget.css          # Widget styles
+│   ├── sagedocs-widget.js           # Embeddable chat widget
+│   └── sagedocs-widget.css          # Widget styles
 ├── admin/
 │   ├── index.html                  # Admin dashboard
 │   └── login.html                  # Admin login page
@@ -148,12 +147,12 @@ forteaibot/
 
 ## Multi-Tenancy
 
-ForteAI supports two levels of tenancy:
+SageDocs supports two levels of tenancy:
 
-1. **ForteAI Tenant** — Which application (e.g., `chirocloud`, `turncloud`). Controls which help docs and tool registry to use.
+1. **SageDocs Tenant** — Which application (e.g., `chirocloud`, `turncloud`). Controls which help docs and tool registry to use.
 2. **App-Level Tenant** — Which account within that application (e.g., a specific clinic). Passed through to the host app's API for data scoping.
 
-Help Mode uses only the ForteAI tenant (all clinics share the same docs). Data Mode uses both (each clinic queries their own data).
+Help Mode uses only the SageDocs tenant (all clinics share the same docs). Data Mode uses both (each clinic queries their own data).
 
 ## API Endpoints
 
@@ -216,14 +215,6 @@ All settings are controlled via environment variables (`.env` file). See `.env.e
 | `ADMIN_PASSWORD` | — | Admin dashboard login password |
 | `JWT_SECRET` | — | Secret for signing admin JWT tokens |
 | `ADMIN_SECRET_KEY` | — | Legacy key for external API key generation |
-
-## Docker
-
-```bash
-cd backend
-docker build -t forteai .
-docker run -p 8500:8500 --env-file ../.env forteai
-```
 
 ## Documentation
 

@@ -13,7 +13,7 @@
 ### Task 1: Load marked.js and DOMPurify via CDN
 
 **Files:**
-- Modify: `widget/forteai-widget.js:73-78` (`_loadStyles` method)
+- Modify: `widget/sagedocs-widget.js:73-78` (`_loadStyles` method)
 
 **Step 1: Add CDN script loading to `_loadStyles`**
 
@@ -23,7 +23,7 @@ Replace the `_loadStyles` method to also load the two JS libraries:
 _loadStyles: function () {
     var link = document.createElement("link");
     link.rel = "stylesheet";
-    link.href = this.config.apiUrl + "/widget/forteai-widget.css";
+    link.href = this.config.apiUrl + "/widget/sagedocs-widget.css";
     document.head.appendChild(link);
 
     // Load marked.js for markdown rendering
@@ -40,7 +40,7 @@ _loadStyles: function () {
 
 **Step 2: Verify scripts load**
 
-Run the FastAPI server: `cd /Applications/XAMPP/xamppfiles/htdocs/forte/forteaibot/backend && source venv/bin/activate && uvicorn app.main:app --reload --port 8500`
+Run the FastAPI server: `cd /Applications/XAMPP/xamppfiles/htdocs/forte/sagedocs/backend && source venv/bin/activate && uvicorn app.main:app --reload --port 8500`
 
 Open browser dev tools on a page that loads the widget. Confirm:
 - Network tab shows both CDN scripts loaded (200 OK)
@@ -49,7 +49,7 @@ Open browser dev tools on a page that loads the widget. Confirm:
 **Step 3: Commit**
 
 ```bash
-git add widget/forteai-widget.js
+git add widget/sagedocs-widget.js
 git commit -m "feat(widget): load marked.js and DOMPurify via CDN"
 ```
 
@@ -58,7 +58,7 @@ git commit -m "feat(widget): load marked.js and DOMPurify via CDN"
 ### Task 2: Replace `_formatMarkdown` with marked.js
 
 **Files:**
-- Modify: `widget/forteai-widget.js:201-226` (`_formatMarkdown` method)
+- Modify: `widget/sagedocs-widget.js:201-226` (`_formatMarkdown` method)
 
 **Step 1: Replace the `_formatMarkdown` method**
 
@@ -104,7 +104,7 @@ Open the widget and send a test message. The LLM response should now render:
 **Step 3: Commit**
 
 ```bash
-git add widget/forteai-widget.js
+git add widget/sagedocs-widget.js
 git commit -m "feat(widget): replace custom markdown with marked.js + DOMPurify"
 ```
 
@@ -113,70 +113,70 @@ git commit -m "feat(widget): replace custom markdown with marked.js + DOMPurify"
 ### Task 3: Replace old custom CSS with markdown element styles
 
 **Files:**
-- Modify: `widget/forteai-widget.css:320-395` (the "Formatted Message Content" section through end of file)
+- Modify: `widget/sagedocs-widget.css:320-395` (the "Formatted Message Content" section through end of file)
 
 **Step 1: Replace the old custom formatting CSS**
 
 Replace everything from `/* Formatted Message Content */` (line 320) to the `/* Responsive */` comment (line 389) with new styles. Keep the responsive media query at the end.
 
-Remove these old classes entirely: `.forteai-list`, `.forteai-ul-item`, `.forteai-ol-item`, `.forteai-code-block`, `.forteai-inline-code` (marked.js outputs standard `<ul>`, `<ol>`, `<li>`, `<pre>`, `<code>` elements).
+Remove these old classes entirely: `.sagedocs-list`, `.sagedocs-ul-item`, `.sagedocs-ol-item`, `.sagedocs-code-block`, `.sagedocs-inline-code` (marked.js outputs standard `<ul>`, `<ol>`, `<li>`, `<pre>`, `<code>` elements).
 
 Replace with:
 
 ```css
 /* Formatted Message Content — Markdown Elements */
-.forteai-msg-text p {
+.sagedocs-msg-text p {
     margin: 0 0 8px 0;
 }
 
-.forteai-msg-text p:last-child {
+.sagedocs-msg-text p:last-child {
     margin-bottom: 0;
 }
 
-.forteai-msg-text strong {
+.sagedocs-msg-text strong {
     font-weight: 600;
 }
 
 /* Headings */
-.forteai-msg-text h1,
-.forteai-msg-text h2,
-.forteai-msg-text h3,
-.forteai-msg-text h4 {
+.sagedocs-msg-text h1,
+.sagedocs-msg-text h2,
+.sagedocs-msg-text h3,
+.sagedocs-msg-text h4 {
     font-weight: 600;
     margin: 12px 0 6px 0;
     line-height: 1.3;
 }
 
-.forteai-msg-text h1 { font-size: 1.2em; }
-.forteai-msg-text h2 { font-size: 1.1em; }
-.forteai-msg-text h3 { font-size: 1.05em; }
-.forteai-msg-text h4 { font-size: 1em; }
+.sagedocs-msg-text h1 { font-size: 1.2em; }
+.sagedocs-msg-text h2 { font-size: 1.1em; }
+.sagedocs-msg-text h3 { font-size: 1.05em; }
+.sagedocs-msg-text h4 { font-size: 1em; }
 
-.forteai-msg-text h1:first-child,
-.forteai-msg-text h2:first-child,
-.forteai-msg-text h3:first-child,
-.forteai-msg-text h4:first-child {
+.sagedocs-msg-text h1:first-child,
+.sagedocs-msg-text h2:first-child,
+.sagedocs-msg-text h3:first-child,
+.sagedocs-msg-text h4:first-child {
     margin-top: 0;
 }
 
 /* Lists */
-.forteai-msg-text ul,
-.forteai-msg-text ol {
+.sagedocs-msg-text ul,
+.sagedocs-msg-text ol {
     margin: 6px 0;
     padding-left: 20px;
 }
 
-.forteai-msg-text li {
+.sagedocs-msg-text li {
     margin-bottom: 4px;
 }
 
-.forteai-msg-text li > ul,
-.forteai-msg-text li > ol {
+.sagedocs-msg-text li > ul,
+.sagedocs-msg-text li > ol {
     margin: 2px 0;
 }
 
 /* Code */
-.forteai-msg-text pre {
+.sagedocs-msg-text pre {
     background: rgba(0, 0, 0, 0.06);
     border-radius: 6px;
     padding: 8px 10px;
@@ -187,7 +187,7 @@ Replace with:
     white-space: pre-wrap;
 }
 
-.forteai-msg-text code {
+.sagedocs-msg-text code {
     background: rgba(0, 0, 0, 0.06);
     border-radius: 3px;
     padding: 1px 5px;
@@ -195,14 +195,14 @@ Replace with:
     font-size: 12px;
 }
 
-.forteai-msg-text pre code {
+.sagedocs-msg-text pre code {
     background: none;
     padding: 0;
     border-radius: 0;
 }
 
 /* Tables */
-.forteai-msg-text table {
+.sagedocs-msg-text table {
     border-collapse: collapse;
     width: 100%;
     margin: 8px 0;
@@ -211,24 +211,24 @@ Replace with:
     overflow-x: auto;
 }
 
-.forteai-msg-text th,
-.forteai-msg-text td {
+.sagedocs-msg-text th,
+.sagedocs-msg-text td {
     border: 1px solid rgba(0, 0, 0, 0.12);
     padding: 6px 10px;
     text-align: left;
 }
 
-.forteai-msg-text th {
+.sagedocs-msg-text th {
     background: rgba(0, 0, 0, 0.04);
     font-weight: 600;
 }
 
-.forteai-msg-text tr:nth-child(even) {
+.sagedocs-msg-text tr:nth-child(even) {
     background: rgba(0, 0, 0, 0.02);
 }
 
 /* Blockquotes */
-.forteai-msg-text blockquote {
+.sagedocs-msg-text blockquote {
     border-left: 3px solid #0066cc;
     background: rgba(0, 102, 204, 0.05);
     margin: 8px 0;
@@ -236,22 +236,22 @@ Replace with:
     color: #555;
 }
 
-.forteai-msg-text blockquote p {
+.sagedocs-msg-text blockquote p {
     margin: 0;
 }
 
 /* Links */
-.forteai-msg-text a {
+.sagedocs-msg-text a {
     color: #0066cc;
     text-decoration: none;
 }
 
-.forteai-msg-text a:hover {
+.sagedocs-msg-text a:hover {
     text-decoration: underline;
 }
 
 /* Horizontal Rules */
-.forteai-msg-text hr {
+.sagedocs-msg-text hr {
     border: none;
     border-top: 1px solid rgba(0, 0, 0, 0.1);
     margin: 10px 0;
@@ -265,7 +265,7 @@ Open the widget and test with responses that contain various markdown elements. 
 **Step 3: Commit**
 
 ```bash
-git add widget/forteai-widget.css
+git add widget/sagedocs-widget.css
 git commit -m "feat(widget): add CSS for full markdown element support"
 ```
 
@@ -274,8 +274,8 @@ git commit -m "feat(widget): add CSS for full markdown element support"
 ### Task 4: Replace source display with collapsible section
 
 **Files:**
-- Modify: `widget/forteai-widget.js:262-267` (source rendering in `_addMessage`)
-- Modify: `widget/forteai-widget.css:165-170` (`.forteai-msg-sources` styles)
+- Modify: `widget/sagedocs-widget.js:262-267` (source rendering in `_addMessage`)
+- Modify: `widget/sagedocs-widget.css:165-170` (`.sagedocs-msg-sources` styles)
 
 **Step 1: Update the source rendering in `_addMessage`**
 
@@ -284,17 +284,17 @@ Replace the source rendering block (lines 262-267) with:
 ```javascript
 if (sources && sources.length > 0) {
     var srcDiv = document.createElement("div");
-    srcDiv.className = "forteai-msg-sources";
+    srcDiv.className = "sagedocs-msg-sources";
     var details = document.createElement("details");
     var summary = document.createElement("summary");
-    summary.innerHTML = '<span class="forteai-sources-icon">&#128196;</span> Sources (' + sources.length + ')';
+    summary.innerHTML = '<span class="sagedocs-sources-icon">&#128196;</span> Sources (' + sources.length + ')';
     details.appendChild(summary);
 
     var srcList = document.createElement("div");
-    srcList.className = "forteai-sources-list";
+    srcList.className = "sagedocs-sources-list";
     sources.forEach(function (s) {
         var pill = document.createElement("span");
-        pill.className = "forteai-source-pill";
+        pill.className = "sagedocs-source-pill";
         pill.textContent = s.title;
         srcList.appendChild(pill);
     });
@@ -306,21 +306,21 @@ if (sources && sources.length > 0) {
 
 **Step 2: Replace the source CSS**
 
-Replace the `.forteai-msg-sources` block (lines 165-170 in CSS) with:
+Replace the `.sagedocs-msg-sources` block (lines 165-170 in CSS) with:
 
 ```css
 /* Collapsible Sources */
-.forteai-msg-sources {
+.sagedocs-msg-sources {
     margin-top: 6px;
     padding-left: 4px;
 }
 
-.forteai-msg-sources details {
+.sagedocs-msg-sources details {
     font-size: 12px;
     color: #666;
 }
 
-.forteai-msg-sources summary {
+.sagedocs-msg-sources summary {
     cursor: pointer;
     user-select: none;
     font-weight: 500;
@@ -328,30 +328,30 @@ Replace the `.forteai-msg-sources` block (lines 165-170 in CSS) with:
     list-style: none;
 }
 
-.forteai-msg-sources summary::-webkit-details-marker {
+.sagedocs-msg-sources summary::-webkit-details-marker {
     display: none;
 }
 
-.forteai-msg-sources summary::after {
+.sagedocs-msg-sources summary::after {
     content: " \25B8";
 }
 
-.forteai-msg-sources details[open] summary::after {
+.sagedocs-msg-sources details[open] summary::after {
     content: " \25BE";
 }
 
-.forteai-sources-icon {
+.sagedocs-sources-icon {
     font-size: 13px;
 }
 
-.forteai-sources-list {
+.sagedocs-sources-list {
     display: flex;
     flex-wrap: wrap;
     gap: 4px;
     padding: 6px 0 2px 0;
 }
 
-.forteai-source-pill {
+.sagedocs-source-pill {
     background: #e8f0fe;
     color: #0066cc;
     border-radius: 12px;
@@ -371,7 +371,7 @@ Send a question that retrieves from documentation. Sources should:
 **Step 4: Commit**
 
 ```bash
-git add widget/forteai-widget.js widget/forteai-widget.css
+git add widget/sagedocs-widget.js widget/sagedocs-widget.css
 git commit -m "feat(widget): collapsible sources with pill badges"
 ```
 
@@ -433,7 +433,7 @@ git commit -m "feat(rag): tune system prompt for structured markdown output"
 **Step 1: Start the server**
 
 ```bash
-cd /Applications/XAMPP/xamppfiles/htdocs/forte/forteaibot/backend
+cd /Applications/XAMPP/xamppfiles/htdocs/forte/sagedocs/backend
 source venv/bin/activate
 uvicorn app.main:app --reload --port 8500
 ```

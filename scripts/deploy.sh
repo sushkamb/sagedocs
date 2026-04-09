@@ -11,13 +11,13 @@
 set -euo pipefail
 
 # --- Configuration ---
-SRC_DIR="/home/ubuntu/ForteAIBot"
-DEPLOY_DIR="/var/www/forteaibot"
-BACKUP_DIR="/var/www/backups/forteaibot"
+SRC_DIR="${SRC_DIR:-/home/ubuntu/SageDocs}"
+DEPLOY_DIR="/var/www/sagedocs"
+BACKUP_DIR="/var/www/backups/sagedocs"
 MAX_BACKUPS=5
 SERVICE_USER="www-data"
 SERVICE_GROUP="www-data"
-SERVICE_NAME="forteaibot"
+SERVICE_NAME="sagedocs"
 
 # --- Parse flags ---
 UPDATE_ONLY=false
@@ -36,7 +36,7 @@ if [[ ! -d "$SRC_DIR" ]]; then
     exit 1
 fi
 
-echo "=== ForteAI Deploy ==="
+echo "=== SageDocs Deploy ==="
 echo "Source:  $SRC_DIR"
 echo "Target:  $DEPLOY_DIR"
 echo ""

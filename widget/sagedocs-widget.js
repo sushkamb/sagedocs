@@ -1,22 +1,22 @@
 /**
- * ForteAI Chat Widget
+ * SageDocs Chat Widget
  * Embeddable chat widget for any web application.
  *
  * Floating mode (default) — adds a FAB + chat panel to the page:
- *   <script src="https://forteai.yourdomain.com/widget/forteai-widget.js"></script>
+ *   <script src="https://sagedocs.yourdomain.com/widget/sagedocs-widget.js"></script>
  *   <script>
- *     ForteAI.init({
+ *     SageDocs.init({
  *       tenant: 'chirocloud',
  *       accountNumber: '12345',   // optional, enables data mode
  *       token: 'jwt-token',       // optional, enables data mode
  *       theme: 'light',           // 'light' or 'dark'
  *       position: 'bottom-right', // 'bottom-right' or 'bottom-left'
- *       apiUrl: 'https://forteai.yourdomain.com'
+ *       apiUrl: 'https://sagedocs.yourdomain.com'
  *     });
  *   </script>
  *
  * Inline mode — render the chat panel inside an existing element (no FAB):
- *   ForteAI.init({
+ *   SageDocs.init({
  *     tenant: 'chirocloud',
  *     inline: true,
  *     target: '#myChatHost'  // CSS selector or HTMLElement
@@ -27,7 +27,7 @@
 (function () {
     "use strict";
 
-    var ForteAI = {
+    var SageDocs = {
         config: null,
         container: null,
         isOpen: false,
@@ -55,8 +55,8 @@
             if (!this.config.apiUrl) {
                 var scripts = document.getElementsByTagName("script");
                 for (var i = 0; i < scripts.length; i++) {
-                    if (scripts[i].src && scripts[i].src.indexOf("forteai-widget.js") > -1) {
-                        this.config.apiUrl = scripts[i].src.replace("/widget/forteai-widget.js", "");
+                    if (scripts[i].src && scripts[i].src.indexOf("sagedocs-widget.js") > -1) {
+                        this.config.apiUrl = scripts[i].src.replace("/widget/sagedocs-widget.js", "");
                         break;
                     }
                 }
@@ -98,25 +98,25 @@
 
         _loadStyles: function () {
             var self = this;
-            if (!document.getElementById("forteai-widget-css")) {
+            if (!document.getElementById("sagedocs-widget-css")) {
                 var link = document.createElement("link");
-                link.id = "forteai-widget-css";
+                link.id = "sagedocs-widget-css";
                 link.rel = "stylesheet";
-                link.href = this.config.apiUrl + "/widget/forteai-widget.css";
+                link.href = this.config.apiUrl + "/widget/sagedocs-widget.css";
                 document.head.appendChild(link);
             }
 
-            if (!document.getElementById("forteai-marked-js") && typeof marked === "undefined") {
+            if (!document.getElementById("sagedocs-marked-js") && typeof marked === "undefined") {
                 var markedScript = document.createElement("script");
-                markedScript.id = "forteai-marked-js";
+                markedScript.id = "sagedocs-marked-js";
                 markedScript.src = "https://cdn.jsdelivr.net/npm/marked@15/marked.min.js";
                 markedScript.onload = function () { self._rerenderAssistantMessages(); };
                 document.head.appendChild(markedScript);
             }
 
-            if (!document.getElementById("forteai-dompurify-js") && typeof DOMPurify === "undefined") {
+            if (!document.getElementById("sagedocs-dompurify-js") && typeof DOMPurify === "undefined") {
                 var purifyScript = document.createElement("script");
-                purifyScript.id = "forteai-dompurify-js";
+                purifyScript.id = "sagedocs-dompurify-js";
                 purifyScript.src = "https://cdn.jsdelivr.net/npm/dompurify@3/dist/purify.min.js";
                 purifyScript.onload = function () { self._rerenderAssistantMessages(); };
                 document.head.appendChild(purifyScript);
@@ -127,34 +127,34 @@
             var self = this;
             var inline = !!this.config.inline;
             var posClass = inline
-                ? "forteai-inline"
-                : (this.config.position === "bottom-left" ? "forteai-left" : "forteai-right");
+                ? "sagedocs-inline"
+                : (this.config.position === "bottom-left" ? "sagedocs-left" : "sagedocs-right");
 
             // Container
             this.container = document.createElement("div");
-            this.container.className = "forteai-container " + posClass;
+            this.container.className = "sagedocs-container " + posClass;
 
             var panelStyle = inline ? "" : 'style="display:none;"';
-            var resizeHandle = inline ? "" : '<div class="forteai-resize-handle" id="forteai-resize-handle"></div>';
-            var closeButton = inline ? "" : '<button class="forteai-close" id="forteai-close">&times;</button>';
+            var resizeHandle = inline ? "" : '<div class="sagedocs-resize-handle" id="sagedocs-resize-handle"></div>';
+            var closeButton = inline ? "" : '<button class="sagedocs-close" id="sagedocs-close">&times;</button>';
             var fabButton = inline ? "" :
-                '<button class="forteai-fab" id="forteai-fab" title="Chat with ForteAI">' +
+                '<button class="sagedocs-fab" id="sagedocs-fab" title="Chat with SageDocs">' +
                     '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">' +
                         '<path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path>' +
                     '</svg>' +
                 '</button>';
 
             this.container.innerHTML =
-                '<div class="forteai-chat-panel" id="forteai-panel" ' + panelStyle + '>' +
+                '<div class="sagedocs-chat-panel" id="sagedocs-panel" ' + panelStyle + '>' +
                     resizeHandle +
-                    '<div class="forteai-header">' +
-                        '<span class="forteai-title">ForteAI Assistant</span>' +
+                    '<div class="sagedocs-header">' +
+                        '<span class="sagedocs-title">SageDocs Assistant</span>' +
                         closeButton +
                     '</div>' +
-                    '<div class="forteai-messages" id="forteai-messages"></div>' +
-                    '<div class="forteai-input-area">' +
-                        '<input type="text" id="forteai-input" placeholder="' + this.config.placeholder + '" />' +
-                        '<button id="forteai-send">&#9654;</button>' +
+                    '<div class="sagedocs-messages" id="sagedocs-messages"></div>' +
+                    '<div class="sagedocs-input-area">' +
+                        '<input type="text" id="sagedocs-input" placeholder="' + this.config.placeholder + '" />' +
+                        '<button id="sagedocs-send">&#9654;</button>' +
                     '</div>' +
                 '</div>' +
                 fabButton;
@@ -165,7 +165,7 @@
                 var t = this.config.target;
                 if (typeof t === "string") t = document.querySelector(t);
                 if (!t) {
-                    console.warn("[ForteAI] inline mode requires a valid 'target' element");
+                    console.warn("[SageDocs] inline mode requires a valid 'target' element");
                     return;
                 }
                 t.innerHTML = "";
@@ -184,15 +184,15 @@
 
             // Event listeners (inline mode skips FAB/close/resize)
             if (!inline) {
-                document.getElementById("forteai-fab").addEventListener("click", function () {
+                document.getElementById("sagedocs-fab").addEventListener("click", function () {
                     self.toggle();
                 });
-                document.getElementById("forteai-close").addEventListener("click", function () {
+                document.getElementById("sagedocs-close").addEventListener("click", function () {
                     self.toggle();
                 });
 
-                var resizeEl = document.getElementById("forteai-resize-handle");
-                var panel = document.getElementById("forteai-panel");
+                var resizeEl = document.getElementById("sagedocs-resize-handle");
+                var panel = document.getElementById("sagedocs-panel");
                 var isResizing = false;
                 var startX, startY, startW, startH;
 
@@ -221,33 +221,33 @@
                 });
             }
 
-            document.getElementById("forteai-send").addEventListener("click", function () {
+            document.getElementById("sagedocs-send").addEventListener("click", function () {
                 self._sendMessage();
             });
-            document.getElementById("forteai-input").addEventListener("keydown", function (e) {
+            document.getElementById("sagedocs-input").addEventListener("keydown", function (e) {
                 if (e.key === "Enter") self._sendMessage();
             });
         },
 
         _updateWelcome: function () {
-            var messagesEl = document.getElementById("forteai-messages");
+            var messagesEl = document.getElementById("sagedocs-messages");
             if (messagesEl && messagesEl.children.length > 0) {
-                messagesEl.children[0].querySelector(".forteai-msg-text").textContent = this.config.welcomeMessage;
+                messagesEl.children[0].querySelector(".sagedocs-msg-text").textContent = this.config.welcomeMessage;
             }
         },
 
         _addStarterQuestions: function () {
             var self = this;
-            var messagesEl = document.getElementById("forteai-messages");
+            var messagesEl = document.getElementById("sagedocs-messages");
             var starterDiv = document.createElement("div");
-            starterDiv.className = "forteai-starters";
+            starterDiv.className = "sagedocs-starters";
 
             this.config.starterQuestions.forEach(function (q) {
                 var btn = document.createElement("button");
-                btn.className = "forteai-starter-btn";
+                btn.className = "sagedocs-starter-btn";
                 btn.textContent = q;
                 btn.addEventListener("click", function () {
-                    document.getElementById("forteai-input").value = q;
+                    document.getElementById("sagedocs-input").value = q;
                     self._sendMessage();
                     starterDiv.remove();
                 });
@@ -259,13 +259,13 @@
 
         toggle: function () {
             this.isOpen = !this.isOpen;
-            var panel = document.getElementById("forteai-panel");
-            var fab = document.getElementById("forteai-fab");
+            var panel = document.getElementById("sagedocs-panel");
+            var fab = document.getElementById("sagedocs-fab");
             panel.style.display = this.isOpen ? "flex" : "none";
             fab.style.display = this.isOpen ? "none" : "flex";
 
             if (this.isOpen) {
-                document.getElementById("forteai-input").focus();
+                document.getElementById("sagedocs-input").focus();
             }
         },
 
@@ -295,7 +295,7 @@
 
         _rerenderAssistantMessages: function () {
             if (typeof marked === "undefined" || typeof DOMPurify === "undefined") return;
-            var nodes = document.querySelectorAll(".forteai-msg-assistant .forteai-msg-text[data-markdown]");
+            var nodes = document.querySelectorAll(".sagedocs-msg-assistant .sagedocs-msg-text[data-markdown]");
             for (var i = 0; i < nodes.length; i++) {
                 nodes[i].innerHTML = this._formatMarkdown(nodes[i].getAttribute("data-markdown"));
             }
@@ -303,12 +303,12 @@
 
         _addMessage: function (role, text, sources, images) {
             var self = this;
-            var messagesEl = document.getElementById("forteai-messages");
+            var messagesEl = document.getElementById("sagedocs-messages");
             var msgDiv = document.createElement("div");
-            msgDiv.className = "forteai-msg forteai-msg-" + role;
+            msgDiv.className = "sagedocs-msg sagedocs-msg-" + role;
 
             var textDiv = document.createElement("div");
-            textDiv.className = "forteai-msg-text";
+            textDiv.className = "sagedocs-msg-text";
 
             if (role === "assistant") {
                 textDiv.setAttribute("data-markdown", text);
@@ -322,11 +322,11 @@
             // Render images if present
             if (images && images.length > 0) {
                 var imagesDiv = document.createElement("div");
-                imagesDiv.className = "forteai-msg-images";
+                imagesDiv.className = "sagedocs-msg-images";
                 images.forEach(function (imgUrl) {
                     var img = document.createElement("img");
                     img.src = self.config.apiUrl + imgUrl;
-                    img.className = "forteai-msg-img";
+                    img.className = "sagedocs-msg-img";
                     img.alt = "Screenshot from documentation";
                     img.addEventListener("click", function () {
                         self._showImageModal(img.src);
@@ -338,17 +338,17 @@
 
             if (sources && sources.length > 0) {
                 var srcDiv = document.createElement("div");
-                srcDiv.className = "forteai-msg-sources";
+                srcDiv.className = "sagedocs-msg-sources";
                 var details = document.createElement("details");
                 var summary = document.createElement("summary");
-                summary.innerHTML = '<span class="forteai-sources-icon">&#128196;</span> Sources (' + sources.length + ')';
+                summary.innerHTML = '<span class="sagedocs-sources-icon">&#128196;</span> Sources (' + sources.length + ')';
                 details.appendChild(summary);
 
                 var srcList = document.createElement("div");
-                srcList.className = "forteai-sources-list";
+                srcList.className = "sagedocs-sources-list";
                 sources.forEach(function (s) {
                     var pill = document.createElement("span");
-                    pill.className = "forteai-source-pill";
+                    pill.className = "sagedocs-source-pill";
                     pill.textContent = s.title;
                     srcList.appendChild(pill);
                 });
@@ -363,8 +363,8 @@
 
         _showImageModal: function (src) {
             var overlay = document.createElement("div");
-            overlay.className = "forteai-img-overlay";
-            overlay.innerHTML = '<img src="' + src + '" class="forteai-img-full" />';
+            overlay.className = "sagedocs-img-overlay";
+            overlay.innerHTML = '<img src="' + src + '" class="sagedocs-img-full" />';
             overlay.addEventListener("click", function () {
                 overlay.remove();
             });
@@ -372,23 +372,23 @@
         },
 
         _showTyping: function () {
-            var messagesEl = document.getElementById("forteai-messages");
+            var messagesEl = document.getElementById("sagedocs-messages");
             var typingDiv = document.createElement("div");
-            typingDiv.className = "forteai-msg forteai-msg-assistant forteai-typing";
-            typingDiv.id = "forteai-typing";
-            typingDiv.innerHTML = '<div class="forteai-msg-text"><span class="forteai-dot"></span><span class="forteai-dot"></span><span class="forteai-dot"></span></div>';
+            typingDiv.className = "sagedocs-msg sagedocs-msg-assistant sagedocs-typing";
+            typingDiv.id = "sagedocs-typing";
+            typingDiv.innerHTML = '<div class="sagedocs-msg-text"><span class="sagedocs-dot"></span><span class="sagedocs-dot"></span><span class="sagedocs-dot"></span></div>';
             messagesEl.appendChild(typingDiv);
             messagesEl.scrollTop = messagesEl.scrollHeight;
         },
 
         _hideTyping: function () {
-            var el = document.getElementById("forteai-typing");
+            var el = document.getElementById("sagedocs-typing");
             if (el) el.remove();
         },
 
         _sendMessage: function () {
             var self = this;
-            var input = document.getElementById("forteai-input");
+            var input = document.getElementById("sagedocs-input");
             var message = input.value.trim();
 
             if (!message) return;
@@ -425,5 +425,5 @@
     };
 
     // Expose globally
-    window.ForteAI = ForteAI;
+    window.SageDocs = SageDocs;
 })();
