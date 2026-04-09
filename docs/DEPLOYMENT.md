@@ -48,20 +48,26 @@ sudo apt install -y python3 python3-venv python3-dev \
 
 ## Step 4: Deploy App Code
 
-The repo is cloned at `/home/ubuntu/SageDocs`. Use the deploy script to sync it to the deployment directory:
+Clone the repo into your home directory (any user works — the deploy script uses whoever owns `SRC_DIR`):
+
+```bash
+git clone git@github.com:sushkamb/sagedocs.git ~/SageDocs
+```
+
+Then run the deploy script. `SRC_DIR` defaults to `$HOME/SageDocs`, so you can usually omit it:
 
 ```bash
 # First-time deploy: creates venv, data dirs, syncs code, installs deps
-sudo bash /home/ubuntu/SageDocs/scripts/deploy.sh
+sudo -E bash ~/SageDocs/scripts/deploy.sh
 ```
 
-The script uses `rsync` to copy code from `/home/ubuntu/SageDocs` to `/var/www/sagedocs`, preserving `.env`, `venv/`, `data/`, and `uploads/` in the deploy directory.
+The script uses `rsync` to copy code from `$SRC_DIR` to `/var/www/sagedocs`, preserving `.env`, `venv/`, `data/`, and `uploads/` in the deploy directory.
 
 For subsequent deploys after code changes:
 
 ```bash
 # Code-only update: syncs code, updates deps, restarts service (skips venv/dir setup)
-sudo bash /home/ubuntu/SageDocs/scripts/deploy.sh --update
+sudo -E bash ~/SageDocs/scripts/deploy.sh --update
 ```
 
 <details>
@@ -277,42 +283,44 @@ sudo systemctl status sagedocs
 
 ```bash
 # Pull latest in the git clone, sync to deploy dir, restart service
-sudo bash /home/ubuntu/SageDocs/scripts/deploy.sh --update
+sudo -E bash ~/SageDocs/scripts/deploy.sh --update
 ```
 
 ### CI/CD with a Self-Hosted GitHub Actions Runner
 
 The repo ships with `.github/workflows/deploy.yml`, which runs `scripts/deploy.sh --update` on a self-hosted runner whenever code is pushed to `main`. One-time setup on the server:
 
+Throughout this section, `$RUNNER_USER` is whichever Linux account you install the runner as (e.g. `sushil`). The runner user is independent from the deployed app's runtime user (`www-data`).
+
 **1. Install the runner**
 
-In GitHub: *Settings → Actions → Runners → New self-hosted runner* and follow the Linux x64 instructions. Install it as the `ubuntu` user under `/home/ubuntu/actions-runner`. When prompted for labels, add `sagedocs` (the workflow targets `[self-hosted, sagedocs]`).
+In GitHub: *Settings → Actions → Runners → New self-hosted runner* and follow the Linux x64 instructions. Install it under `$HOME/actions-runner` as your login user. When prompted for labels, add `sagedocs` (the workflow targets `[self-hosted, sagedocs]`).
 
 **2. Install as a service**
 
 ```bash
-cd /home/ubuntu/actions-runner
-sudo ./svc.sh install ubuntu
+cd ~/actions-runner
+sudo ./svc.sh install $USER
 sudo ./svc.sh start
 ```
 
 **3. Grant passwordless sudo for the deploy script only**
 
-The workflow runs `sudo -E bash scripts/deploy.sh --update`, so the runner user needs to invoke that one script without a password. Create `/etc/sudoers.d/sagedocs-runner`:
+The workflow runs `sudo -E bash scripts/deploy.sh --update`, so the runner user needs to invoke that one script without a password. Create `/etc/sudoers.d/sagedocs-runner` (replace `sushil` with your runner user):
 
 ```
-ubuntu ALL=(root) NOPASSWD: SETENV: /bin/bash /home/ubuntu/actions-runner/_work/sagedocs/sagedocs/scripts/deploy.sh *
+sushil ALL=(root) NOPASSWD: SETENV: /bin/bash /home/sushil/actions-runner/_work/sagedocs/sagedocs/scripts/deploy.sh *
 ```
 
 Then `sudo visudo -c` to validate.
 
 **4. Trigger a deploy**
 
-Push to `main`, or run *Actions → Deploy to production → Run workflow* in GitHub. The runner will checkout into its work directory, run the deploy script with `SRC_DIR` pointed at the checkout, and the script will rsync to `/var/www/sagedocs` and restart the systemd unit.
+Push to `main`, or run *Actions → Deploy to production → Run workflow* in GitHub. The runner will checkout into its work directory, run the deploy script with `SRC_DIR` pointed at the checkout (and `SKIP_GIT_PULL=1` since Actions already fetched the code), and the script will rsync to `/var/www/sagedocs` and restart the systemd unit.
 
 **Notes**
 
-- `/home/ubuntu/SageDocs` (the manual-deploy clone) is no longer needed once CI is wired up, but it's harmless to leave in place.
+- `~/SageDocs` (the manual-deploy clone) is no longer needed once CI is wired up, but it's harmless to leave in place.
 - The runner itself survives reboots via systemd (`actions.runner.*.service`).
 - To check runner status: `sudo systemctl status 'actions.runner.*'`.
 

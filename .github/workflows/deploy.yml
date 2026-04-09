@@ -19,6 +19,7 @@ jobs:
       - name: Run deploy script
         env:
           SRC_DIR: ${{ github.workspace }}
+          SKIP_GIT_PULL: "1"
         run: sudo -E bash scripts/deploy.sh --update
 
       - name: Health check

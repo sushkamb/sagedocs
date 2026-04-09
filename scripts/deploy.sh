@@ -11,7 +11,7 @@
 set -euo pipefail
 
 # --- Configuration ---
-SRC_DIR="${SRC_DIR:-/home/ubuntu/SageDocs}"
+SRC_DIR="${SRC_DIR:-$HOME/SageDocs}"
 DEPLOY_DIR="/var/www/sagedocs"
 BACKUP_DIR="/var/www/backups/sagedocs"
 MAX_BACKUPS=5
@@ -42,9 +42,16 @@ echo "Target:  $DEPLOY_DIR"
 echo ""
 
 # --- Step 1: Pull latest code in source repo ---
+# Run git pull as the owner of SRC_DIR so SSH keys / git config resolve correctly.
+# Skip entirely when SKIP_GIT_PULL=1 (e.g. CI has already checked out the code).
 echo "[1/7] Pulling latest code in $SRC_DIR..."
 cd "$SRC_DIR"
-sudo -u ubuntu git pull || echo "Warning: git pull failed (may not have remote configured)"
+if [[ "${SKIP_GIT_PULL:-0}" == "1" ]]; then
+    echo "  Skipping git pull (SKIP_GIT_PULL=1)."
+else
+    SRC_OWNER=$(stat -c '%U' "$SRC_DIR")
+    sudo -u "$SRC_OWNER" git pull || echo "Warning: git pull failed (may not have remote configured)"
+fi
 
 # --- Step 2: Back up current deployment ---
 if [[ -d "$DEPLOY_DIR/backend" ]]; then
