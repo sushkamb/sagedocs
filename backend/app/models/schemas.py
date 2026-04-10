@@ -51,6 +51,10 @@ class TenantConfig(BaseModel):
     rag_top_k: Optional[int] = None
     similarity_threshold: Optional[float] = None
     api_key_hash: Optional[str] = None
+    # Widget embedding security
+    allowed_origins: list[str] = []
+    enforce_origin_check: bool = False
+    widget_api_key_hash: Optional[str] = None
 
 
 class AnalyticsEntry(BaseModel):
