@@ -49,7 +49,8 @@
                 placeholder: "Ask me anything...",
                 starterQuestions: [],
                 inline: false,
-                target: null
+                target: null,
+                widgetApiKey: ""
             }, options);
 
             if (!this.config.apiUrl) {
@@ -79,11 +80,24 @@
             this.messages = [];
         },
 
+        _buildHeaders: function () {
+            var headers = { "Content-Type": "application/json" };
+            if (this.config.widgetApiKey) {
+                headers["X-Widget-Key"] = this.config.widgetApiKey;
+            }
+            return headers;
+        },
+
         _fetchTenantConfig: function () {
             var self = this;
             if (!this.config.tenant) return;
 
-            fetch(this.config.apiUrl + "/api/tenants/" + this.config.tenant)
+            var fetchOpts = {};
+            if (this.config.widgetApiKey) {
+                fetchOpts.headers = { "X-Widget-Key": this.config.widgetApiKey };
+            }
+
+            fetch(this.config.apiUrl + "/api/tenants/" + this.config.tenant, fetchOpts)
                 .then(function (r) { return r.ok ? r.json() : null; })
                 .then(function (data) {
                     if (data) {
@@ -408,7 +422,7 @@
 
             fetch(this.config.apiUrl + "/api/chat/", {
                 method: "POST",
-                headers: { "Content-Type": "application/json" },
+                headers: self._buildHeaders(),
                 body: JSON.stringify(body)
             })
             .then(function (r) { return r.json(); })
