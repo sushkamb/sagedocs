@@ -32,6 +32,9 @@
                 <select id="tenantSelect">
                     <option value="">Select tenant...</option>
                 </select>
+                <button class="btn-add-tenant" id="btnEditTenant" title="Edit tenant settings" style="display:none;">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+                </button>
                 <button class="btn-add-tenant" id="btnAddTenant" title="Create new tenant">
                     <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
                 </button>
@@ -70,11 +73,11 @@
         <div class="sidebar-footer">SageDocs v0.1.0</div>
     </aside>
 
-    <!-- CREATE TENANT MODAL -->
+    <!-- TENANT MODAL (Create / Edit) -->
     <div class="modal-overlay" id="tenantModal">
         <div class="modal">
             <div class="modal-header">
-                <h2>Create Tenant</h2>
+                <h2 id="tenantModalTitle">Create Tenant</h2>
                 <button class="modal-close" id="tenantModalClose">
                     <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
                 </button>
@@ -97,6 +100,17 @@
                 <div class="form-group">
                     <label class="form-label">Welcome Message</label>
                     <input type="text" id="newTenantWelcome" class="form-input" placeholder="Hi! How can I help you?" />
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label">Placeholder Text</label>
+                    <input type="text" id="newTenantPlaceholder" class="form-input" placeholder="Ask me anything..." />
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label">Starter Questions</label>
+                    <textarea id="newTenantStarters" class="form-input" rows="3" placeholder="One question per line"></textarea>
+                    <div class="form-hint">One question per line. These appear as quick-action buttons in the widget.</div>
                 </div>
 
                 <div class="form-group">
@@ -134,14 +148,49 @@
                 <div class="form-group">
                     <label class="form-label">Similarity Threshold</label>
                     <input type="number" id="newTenantThreshold" class="form-input" placeholder="0.65" min="0" max="1" step="0.05" />
-                    <div class="form-hint">Max cosine distance for RAG results (0–1). Lower = stricter matching. Leave blank for default (0.65).</div>
+                    <div class="form-hint">Max cosine distance for RAG results (0-1). Lower = stricter matching. Leave blank for default (0.65).</div>
+                </div>
+
+                <hr style="border:none; border-top:1px solid var(--border); margin:16px 0;" />
+
+                <div style="font-weight:600; margin-bottom:12px;">Widget Security</div>
+
+                <div class="form-group">
+                    <label class="form-label">Allowed Origins</label>
+                    <textarea id="newTenantOrigins" class="form-input" rows="3" placeholder="https://myapp.com&#10;http://localhost:3000"></textarea>
+                    <div class="form-hint">One origin per line. Include protocol (e.g. https://example.com).</div>
+                </div>
+
+                <div class="form-group">
+                    <div class="toggle-row">
+                        <div>
+                            <div class="toggle-label">Enforce Origin Check</div>
+                            <div class="toggle-desc">When off, origin validation is skipped (useful for development)</div>
+                        </div>
+                        <label class="toggle-switch">
+                            <input type="checkbox" id="newTenantEnforceOrigin" />
+                            <span class="toggle-slider"></span>
+                        </label>
+                    </div>
+                </div>
+
+                <div class="form-group" id="widgetKeyGroup" style="display:none;">
+                    <label class="form-label">Widget API Key</label>
+                    <div id="widgetKeyStatus" style="font-size:13px; color:var(--text-muted); margin-bottom:8px;">
+                        A widget API key is configured for this tenant.
+                    </div>
+                    <button class="btn btn-secondary" id="generateWidgetKeyBtn" type="button">Generate New Widget API Key</button>
+                    <div id="widgetKeyDisplay" style="display:none; margin-top:8px;">
+                        <div style="font-size:12px; color:#ef4444; font-weight:500; margin-bottom:4px;">Save this key now — it cannot be retrieved again:</div>
+                        <code id="widgetKeyValue" style="display:block; padding:8px 12px; background:var(--bg-secondary); border-radius:6px; font-size:13px; word-break:break-all;"></code>
+                    </div>
                 </div>
             </div>
             <div class="modal-footer">
                 <button class="btn btn-secondary" id="tenantModalCancel">Cancel</button>
-                <button class="btn btn-primary" id="tenantCreateBtn">
+                <button class="btn btn-primary" id="tenantSaveBtn">
                     <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
-                    Create Tenant
+                    <span id="tenantSaveBtnText">Create Tenant</span>
                 </button>
             </div>
         </div>
@@ -330,6 +379,7 @@
         }
 
         var currentTenant = "";
+        var tenantModalMode = "create";
 
         var pageTitles = {
             documents: { title: "Documents", subtitle: "Upload and manage help documentation" },
@@ -426,6 +476,7 @@
 
         document.getElementById("tenantSelect").addEventListener("change", function () {
             currentTenant = this.value;
+            document.getElementById("btnEditTenant").style.display = currentTenant ? "flex" : "none";
             if (currentTenant) {
                 loadDocuments();
                 loadAnalytics();
@@ -433,28 +484,90 @@
             }
         });
 
-        // ═══ CREATE TENANT MODAL ═══
+        // ═══ TENANT MODAL (Create / Edit) ═══
         var tenantModal = document.getElementById("tenantModal");
 
-        function openTenantModal() {
-            tenantModal.classList.add("open");
+        function resetTenantModal() {
             setTenantCreateStatus("", "");
             document.getElementById("newTenantId").value = "";
+            document.getElementById("newTenantId").readOnly = false;
+            document.getElementById("newTenantId").style.opacity = "1";
+            document.getElementById("newTenantId").dataset.manual = "";
             document.getElementById("newTenantName").value = "";
             document.getElementById("newTenantWelcome").value = "";
+            document.getElementById("newTenantPlaceholder").value = "";
+            document.getElementById("newTenantStarters").value = "";
             document.getElementById("newTenantColor").value = "#0066cc";
             document.getElementById("newTenantColorPicker").value = "#0066cc";
             document.getElementById("newTenantHelp").checked = true;
             document.getElementById("newTenantData").checked = false;
             document.getElementById("newTenantThreshold").value = "";
-            setTimeout(function () { document.getElementById("newTenantId").focus(); }, 150);
+            document.getElementById("newTenantOrigins").value = "";
+            document.getElementById("newTenantEnforceOrigin").checked = false;
+            document.getElementById("widgetKeyGroup").style.display = "none";
+            document.getElementById("widgetKeyDisplay").style.display = "none";
+            document.getElementById("widgetKeyValue").textContent = "";
+        }
+
+        function openTenantModal(mode, tenantData) {
+            tenantModalMode = mode;
+            resetTenantModal();
+
+            if (mode === "edit" && tenantData) {
+                document.getElementById("tenantModalTitle").textContent = "Edit Tenant";
+                document.getElementById("tenantSaveBtnText").textContent = "Save Changes";
+
+                document.getElementById("newTenantId").value = tenantData.tenant_id;
+                document.getElementById("newTenantId").readOnly = true;
+                document.getElementById("newTenantId").style.opacity = "0.6";
+                document.getElementById("newTenantName").value = tenantData.display_name || "";
+                document.getElementById("newTenantWelcome").value = tenantData.welcome_message || "";
+                document.getElementById("newTenantPlaceholder").value = tenantData.placeholder_text || "";
+                document.getElementById("newTenantStarters").value = (tenantData.starter_questions || []).join("\n");
+                document.getElementById("newTenantColor").value = tenantData.primary_color || "#0066cc";
+                document.getElementById("newTenantColorPicker").value = tenantData.primary_color || "#0066cc";
+                document.getElementById("newTenantHelp").checked = tenantData.help_mode_enabled !== false;
+                document.getElementById("newTenantData").checked = !!tenantData.data_mode_enabled;
+                document.getElementById("newTenantThreshold").value = tenantData.similarity_threshold != null ? tenantData.similarity_threshold : "";
+                document.getElementById("newTenantOrigins").value = (tenantData.allowed_origins || []).join("\n");
+                document.getElementById("newTenantEnforceOrigin").checked = !!tenantData.enforce_origin_check;
+
+                document.getElementById("widgetKeyGroup").style.display = "block";
+                if (tenantData.widget_api_key_hash) {
+                    document.getElementById("widgetKeyStatus").textContent = "A widget API key is configured for this tenant.";
+                } else {
+                    document.getElementById("widgetKeyStatus").textContent = "No widget API key configured.";
+                }
+            } else {
+                document.getElementById("tenantModalTitle").textContent = "Create Tenant";
+                document.getElementById("tenantSaveBtnText").textContent = "Create Tenant";
+            }
+
+            tenantModal.classList.add("open");
+            if (mode === "create") {
+                setTimeout(function () { document.getElementById("newTenantId").focus(); }, 150);
+            } else {
+                setTimeout(function () { document.getElementById("newTenantName").focus(); }, 150);
+            }
         }
 
         function closeTenantModal() {
             tenantModal.classList.remove("open");
         }
 
-        document.getElementById("btnAddTenant").addEventListener("click", openTenantModal);
+        document.getElementById("btnAddTenant").addEventListener("click", function () {
+            openTenantModal("create");
+        });
+
+        document.getElementById("btnEditTenant").addEventListener("click", function () {
+            if (!currentTenant) return;
+            authFetch(API_BASE + "/api/tenants/" + currentTenant)
+                .then(function (r) { return r.json(); })
+                .then(function (data) {
+                    openTenantModal("edit", data);
+                });
+        });
+
         document.getElementById("tenantModalClose").addEventListener("click", closeTenantModal);
         document.getElementById("tenantModalCancel").addEventListener("click", closeTenantModal);
 
@@ -477,11 +590,13 @@
             }
         });
 
-        // Auto-slug tenant ID from display name
+        // Auto-slug tenant ID from display name (only in create mode)
         document.getElementById("newTenantName").addEventListener("input", function () {
-            var idField = document.getElementById("newTenantId");
-            if (!idField.dataset.manual) {
-                idField.value = this.value.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "");
+            if (tenantModalMode === "create") {
+                var idField = document.getElementById("newTenantId");
+                if (!idField.dataset.manual) {
+                    idField.value = this.value.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "");
+                }
             }
         });
 
@@ -496,7 +611,38 @@
             el.className = "modal-status " + type;
         }
 
-        document.getElementById("tenantCreateBtn").addEventListener("click", function () {
+        // ═══ GENERATE WIDGET API KEY ═══
+        document.getElementById("generateWidgetKeyBtn").addEventListener("click", function () {
+            var btn = this;
+            var tenantId = document.getElementById("newTenantId").value.trim();
+            if (!tenantId) return;
+
+            if (!confirm("Generate a new widget API key? This will invalidate any existing widget key.")) return;
+
+            btn.disabled = true;
+            btn.classList.add("btn-loading");
+
+            authFetch(API_BASE + "/api/tenants/" + tenantId + "/widget-api-key", { method: "POST" })
+                .then(function (r) {
+                    if (!r.ok) throw new Error("Failed (HTTP " + r.status + ")");
+                    return r.json();
+                })
+                .then(function (data) {
+                    document.getElementById("widgetKeyDisplay").style.display = "block";
+                    document.getElementById("widgetKeyValue").textContent = data.widget_api_key;
+                    document.getElementById("widgetKeyStatus").textContent = "A widget API key is configured for this tenant.";
+                })
+                .catch(function (err) {
+                    setTenantCreateStatus("Error generating widget key: " + err.message, "error");
+                })
+                .finally(function () {
+                    btn.disabled = false;
+                    btn.classList.remove("btn-loading");
+                });
+        });
+
+        // ═══ SAVE TENANT (Create or Update) ═══
+        document.getElementById("tenantSaveBtn").addEventListener("click", function () {
             var btn = this;
             var tenantId = document.getElementById("newTenantId").value.trim();
             var displayName = document.getElementById("newTenantName").value.trim();
@@ -506,26 +652,45 @@
                 return;
             }
 
-            if (!/^[a-z0-9][a-z0-9-]*[a-z0-9]$|^[a-z0-9]$/.test(tenantId)) {
+            if (tenantModalMode === "create" && !/^[a-z0-9][a-z0-9-]*[a-z0-9]$|^[a-z0-9]$/.test(tenantId)) {
                 setTenantCreateStatus("Tenant ID must be lowercase letters, numbers, and hyphens only.", "error");
                 return;
             }
+
+            var startersRaw = document.getElementById("newTenantStarters").value.trim();
+            var starters = startersRaw ? startersRaw.split("\n").map(function (s) { return s.trim(); }).filter(Boolean) : [];
+
+            var originsRaw = document.getElementById("newTenantOrigins").value.trim();
+            var origins = originsRaw ? originsRaw.split("\n").map(function (s) { return s.trim(); }).filter(Boolean) : [];
 
             var payload = {
                 tenant_id: tenantId,
                 display_name: displayName,
                 welcome_message: document.getElementById("newTenantWelcome").value.trim() || "Hi! How can I help you?",
+                placeholder_text: document.getElementById("newTenantPlaceholder").value.trim() || "Ask me anything...",
+                starter_questions: starters,
                 primary_color: document.getElementById("newTenantColor").value.trim() || "#0066cc",
                 help_mode_enabled: document.getElementById("newTenantHelp").checked,
                 data_mode_enabled: document.getElementById("newTenantData").checked,
-                similarity_threshold: document.getElementById("newTenantThreshold").value ? parseFloat(document.getElementById("newTenantThreshold").value) : null
+                similarity_threshold: document.getElementById("newTenantThreshold").value ? parseFloat(document.getElementById("newTenantThreshold").value) : null,
+                allowed_origins: origins,
+                enforce_origin_check: document.getElementById("newTenantEnforceOrigin").checked
             };
 
             btn.disabled = true;
             btn.classList.add("btn-loading");
 
-            authFetch(API_BASE + "/api/tenants/create", {
-                method: "POST",
+            var url, method;
+            if (tenantModalMode === "edit") {
+                url = API_BASE + "/api/tenants/" + tenantId;
+                method = "PUT";
+            } else {
+                url = API_BASE + "/api/tenants/create";
+                method = "POST";
+            }
+
+            authFetch(url, {
+                method: method,
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify(payload)
             })
@@ -534,10 +699,12 @@
                 return r.json();
             })
             .then(function () {
-                setTenantCreateStatus("Tenant '" + displayName + "' created successfully.", "success");
+                var verb = tenantModalMode === "edit" ? "updated" : "created";
+                setTenantCreateStatus("Tenant '" + displayName + "' " + verb + " successfully.", "success");
                 loadTenants().then(function () {
                     document.getElementById("tenantSelect").value = tenantId;
                     currentTenant = tenantId;
+                    document.getElementById("btnEditTenant").style.display = "flex";
                 });
                 setTimeout(closeTenantModal, 1200);
             })
