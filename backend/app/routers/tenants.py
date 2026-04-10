@@ -3,10 +3,12 @@ import json
 import os
 import secrets
 
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, Depends, Header, HTTPException, Request
+from fastapi.responses import JSONResponse
 
 from app.models.schemas import TenantConfig
 from app.routers.admin_auth import verify_admin_token
+from app.auth import validate_widget_access, validate_widget_api_key, build_csp_header
 
 router = APIRouter(prefix="/api/tenants", tags=["Tenants"])
 
@@ -27,15 +29,40 @@ async def create_tenant(config: TenantConfig):
     return {"message": f"Tenant '{config.tenant_id}' configured successfully"}
 
 
-@router.get("/{tenant_id}", response_model=TenantConfig)
-async def get_tenant(tenant_id: str):
+@router.get("/{tenant_id}")
+async def get_tenant(tenant_id: str, request: Request, x_widget_key: str | None = Header(None)):
     """Get tenant configuration. Public — used by the widget."""
     path = _get_tenant_path(tenant_id)
     if not os.path.exists(path):
         raise HTTPException(status_code=404, detail=f"Tenant '{tenant_id}' not found")
     with open(path, "r") as f:
         data = json.load(f)
-    return TenantConfig(**data)
+
+    # Validate origin
+    origin = request.headers.get("origin")
+    origin_error = validate_widget_access(data, origin)
+    if origin_error:
+        raise HTTPException(status_code=403, detail=origin_error)
+
+    # Validate widget API key
+    key_error = validate_widget_api_key(data, x_widget_key)
+    if key_error:
+        raise HTTPException(status_code=401, detail=key_error)
+
+    # Build response — exclude sensitive hashes
+    config = TenantConfig(**data)
+    response_data = config.model_dump()
+    response_data.pop("api_key_hash", None)
+    response_data.pop("widget_api_key_hash", None)
+
+    response = JSONResponse(content=response_data)
+
+    # Add CSP header
+    csp = build_csp_header(data)
+    if csp:
+        response.headers["Content-Security-Policy"] = csp
+
+    return response
 
 
 @router.post("/{tenant_id}/api-key", dependencies=[Depends(verify_admin_token)])
