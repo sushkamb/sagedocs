@@ -216,6 +216,7 @@ tools:
 - **Read-only endpoints** — The `/api/assistant/*` endpoints in ChiroCloud are strictly GET/read-only
 - **No cross-tenant data leakage** — SageDocs never stores or caches host app data
 - **API key authentication** — External document upload API uses per-tenant API keys (SHA-256 hashed, `fai_` prefix). Tenant is derived from the key so callers cannot upload to other tenants.
+- **Widget embedding security** — Per-tenant domain whitelisting (`allowed_origins`), widget API keys (`wk_` prefix, SHA-256 hashed), and CSP `frame-ancestors` headers on widget-facing endpoints. Origin enforcement is toggleable per tenant via `enforce_origin_check` flag.
 - **Admin JWT authentication** — Admin endpoints (document management, tenant creation, API key generation, analytics) require a Bearer token obtained via `POST /api/admin/login`
 
 ---
@@ -233,7 +234,8 @@ Two lines in any host app:
     tenant: 'chirocloud',
     accountNumber: '12345',
     token: '{jwt}',
-    theme: 'light'
+    theme: 'light',
+    widgetApiKey: 'wk_...'   // optional, required if tenant has widget key configured
   });
 </script>
 ```
@@ -254,6 +256,9 @@ Two lines in any host app:
 - Position (bottom-right, bottom-left)
 - Starter questions
 - Help-only mode, Data-only mode, or both
+- Allowed origins (domain whitelist for widget embedding)
+- Enforce origin check toggle
+- Widget API key
 
 ---
 

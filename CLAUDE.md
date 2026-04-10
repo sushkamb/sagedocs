@@ -62,6 +62,7 @@ uvicorn app.main:app --reload --port 8500
 - **Tool Registry:** YAML files in `backend/tools/` define available data queries per tenant
 - **Adding a new data query:** Add entry to the tenant's YAML + build the API endpoint in the host app
 - **Adding help content:** Upload via admin dashboard or POST to `/api/documents/upload`
+- **Widget Security:** Per-tenant `allowed_origins` + `enforce_origin_check` flag + widget API keys (`wk_` prefix). Validation runs on `GET /api/tenants/{id}` and `/api/chat/*` endpoints.
 
 ## Code Style
 
