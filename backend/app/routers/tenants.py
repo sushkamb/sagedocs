@@ -65,6 +65,32 @@ async def get_tenant(tenant_id: str, request: Request, x_widget_key: str | None 
     return response
 
 
+@router.put("/{tenant_id}", dependencies=[Depends(verify_admin_token)])
+async def update_tenant(tenant_id: str, updates: dict):
+    """Update tenant configuration. Tenant ID is immutable."""
+    path = _get_tenant_path(tenant_id)
+    if not os.path.exists(path):
+        raise HTTPException(status_code=404, detail=f"Tenant '{tenant_id}' not found")
+
+    with open(path, "r") as f:
+        data = json.load(f)
+
+    # Prevent tenant_id from being changed
+    updates.pop("tenant_id", None)
+    # Don't allow overwriting key hashes via this endpoint
+    updates.pop("api_key_hash", None)
+    updates.pop("widget_api_key_hash", None)
+
+    data.update(updates)
+
+    # Validate the merged config
+    config = TenantConfig(**data)
+    with open(path, "w") as f:
+        json.dump(config.model_dump(), f, indent=2)
+
+    return {"message": f"Tenant '{tenant_id}' updated successfully"}
+
+
 @router.post("/{tenant_id}/api-key", dependencies=[Depends(verify_admin_token)])
 async def generate_api_key(tenant_id: str):
     """Generate an API key for a tenant. Protected by admin JWT auth."""
@@ -85,6 +111,29 @@ async def generate_api_key(tenant_id: str):
     return {
         "tenant_id": tenant_id,
         "api_key": api_key,
+        "message": "Save this key now — it cannot be retrieved again.",
+    }
+
+
+@router.post("/{tenant_id}/widget-api-key", dependencies=[Depends(verify_admin_token)])
+async def generate_widget_api_key(tenant_id: str):
+    """Generate a widget API key for a tenant. Protected by admin JWT auth."""
+    path = _get_tenant_path(tenant_id)
+    if not os.path.exists(path):
+        raise HTTPException(status_code=404, detail=f"Tenant '{tenant_id}' not found")
+
+    widget_key = f"wk_{secrets.token_urlsafe(32)}"
+    key_hash = hashlib.sha256(widget_key.encode()).hexdigest()
+
+    with open(path, "r") as f:
+        data = json.load(f)
+    data["widget_api_key_hash"] = key_hash
+    with open(path, "w") as f:
+        json.dump(data, f, indent=2)
+
+    return {
+        "tenant_id": tenant_id,
+        "widget_api_key": widget_key,
         "message": "Save this key now — it cannot be retrieved again.",
     }
 
