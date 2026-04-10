@@ -1,0 +1,115 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SageDocs Widget - Local Test</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; background: #f5f5f5; padding: 40px; }
+        .container { max-width: 800px; margin: 0 auto; }
+        h1 { font-size: 24px; margin-bottom: 8px; }
+        p { color: #666; margin-bottom: 24px; }
+        .config-panel { background: #fff; border-radius: 8px; padding: 24px; box-shadow: 0 1px 3px rgba(0,0,0,0.1); margin-bottom: 24px; }
+        .config-panel h2 { font-size: 16px; margin-bottom: 16px; }
+        .form-row { display: flex; gap: 16px; margin-bottom: 12px; }
+        .form-row > div { flex: 1; }
+        label { display: block; font-size: 13px; font-weight: 600; margin-bottom: 4px; }
+        input, select { width: 100%; padding: 8px 12px; border: 1px solid #ddd; border-radius: 6px; font-size: 14px; }
+        button { background: #0066cc; color: #fff; border: none; padding: 10px 20px; border-radius: 6px; font-size: 14px; cursor: pointer; margin-top: 12px; }
+        button:hover { background: #0052a3; }
+        .hint { font-size: 12px; color: #999; margin-top: 4px; }
+        .status { margin-top: 12px; padding: 8px 12px; border-radius: 6px; font-size: 13px; display: none; }
+        .status.ok { display: block; background: #ecfdf5; color: #065f46; }
+        .status.err { display: block; background: #fef2f2; color: #991b1b; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>SageDocs Widget - Local Test</h1>
+        <p>Use this page to test the widget locally. Configure the settings below and click "Load Widget".</p>
+
+        <div class="config-panel">
+            <h2>Widget Configuration</h2>
+            <div class="form-row">
+                <div>
+                    <label>API URL</label>
+                    <input type="text" id="cfgApiUrl" value="http://localhost:8500" />
+                </div>
+                <div>
+                    <label>Tenant</label>
+                    <input type="text" id="cfgTenant" placeholder="e.g. chirocloud" />
+                </div>
+            </div>
+            <div class="form-row">
+                <div>
+                    <label>Widget API Key</label>
+                    <input type="text" id="cfgWidgetKey" placeholder="wk_... (optional)" />
+                    <div class="hint">Required if the tenant has a widget API key configured.</div>
+                </div>
+                <div>
+                    <label>Theme</label>
+                    <select id="cfgTheme">
+                        <option value="light">Light</option>
+                        <option value="dark">Dark</option>
+                    </select>
+                </div>
+            </div>
+            <div class="form-row">
+                <div>
+                    <label>Account Number (optional)</label>
+                    <input type="text" id="cfgAccount" placeholder="For data mode" />
+                </div>
+                <div>
+                    <label>Token (optional)</label>
+                    <input type="text" id="cfgToken" placeholder="JWT for data mode" />
+                </div>
+            </div>
+            <div class="form-row">
+                <div>
+                    <label>Position</label>
+                    <select id="cfgPosition">
+                        <option value="bottom-right">Bottom Right</option>
+                        <option value="bottom-left">Bottom Left</option>
+                    </select>
+                </div>
+                <div></div>
+            </div>
+            <button onclick="loadWidget()">Load Widget</button>
+            <div class="status" id="loadStatus"></div>
+        </div>
+    </div>
+
+    <script src="/widget/sagedocs-widget.js"></script>
+    <script>
+        function loadWidget() {
+            var tenant = document.getElementById("cfgTenant").value.trim();
+            var statusEl = document.getElementById("loadStatus");
+
+            if (!tenant) {
+                statusEl.className = "status err";
+                statusEl.textContent = "Tenant is required.";
+                return;
+            }
+
+            var opts = {
+                tenant: tenant,
+                apiUrl: document.getElementById("cfgApiUrl").value.trim(),
+                widgetApiKey: document.getElementById("cfgWidgetKey").value.trim(),
+                theme: document.getElementById("cfgTheme").value,
+                position: document.getElementById("cfgPosition").value
+            };
+
+            var account = document.getElementById("cfgAccount").value.trim();
+            var token = document.getElementById("cfgToken").value.trim();
+            if (account) opts.accountNumber = account;
+            if (token) opts.token = token;
+
+            SageDocs.init(opts);
+
+            statusEl.className = "status ok";
+            statusEl.textContent = "Widget loaded for tenant '" + tenant + "'. Click the chat button in the corner.";
+        }
+    </script>
+</body>
+</html>
