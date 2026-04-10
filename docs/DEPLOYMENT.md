@@ -12,7 +12,7 @@ Internet → Apache (SSL + reverse proxy) → uvicorn :8100 → FastAPI app
 ## Prerequisites
 
 - AWS account with Lightsail access
-- Domain name pointed to the server (e.g., `aichatbot.ignitx.solutions`)
+- Domain name pointed to the server (e.g., `aichatbot.ethosystech.com`)
 - OpenAI and/or Anthropic API key(s)
 
 ---
@@ -31,7 +31,7 @@ Internet → Apache (SSL + reverse proxy) → uvicorn :8100 → FastAPI app
 Add an **A record** for your domain pointing to the Lightsail static IP:
 
 ```
-aichatbot.ignitx.solutions → <static-ip>
+aichatbot.ethosystech.com → <static-ip>
 ```
 
 Allow a few minutes for DNS propagation.
@@ -111,7 +111,7 @@ HOST=127.0.0.1
 PORT=8100
 
 # CORS — comma-separated allowed origins
-CORS_ORIGINS=https://aichatbot.ignitx.solutions,https://your-host-app.com
+CORS_ORIGINS=https://aichatbot.ethosystech.com,https://your-host-app.com
 
 # Admin
 ADMIN_SECRET_KEY=<generate-a-random-secret>
@@ -180,7 +180,7 @@ Create `/etc/apache2/sites-available/sagedocs.conf`:
 
 ```apache
 <VirtualHost *:80>
-    ServerName aichatbot.ignitx.solutions
+    ServerName aichatbot.ethosystech.com
 
     # Redirect HTTP to HTTPS
     RewriteEngine On
@@ -189,7 +189,7 @@ Create `/etc/apache2/sites-available/sagedocs.conf`:
 </VirtualHost>
 
 <VirtualHost *:443>
-    ServerName aichatbot.ignitx.solutions
+    ServerName aichatbot.ethosystech.com
 
     # SSL — certbot will fill in certificate paths (Step 9)
 
@@ -226,7 +226,7 @@ sudo systemctl restart apache2
 ## Step 9: SSL with Let's Encrypt
 
 ```bash
-sudo certbot --apache -d aichatbot.ignitx.solutions
+sudo certbot --apache -d aichatbot.ethosystech.com
 ```
 
 Follow the prompts. Certbot automatically configures the SSL VirtualHost and sets up auto-renewal.
@@ -240,12 +240,12 @@ sudo certbot renew --dry-run
 ## Step 10: Verify Deployment
 
 ```bash
-curl https://aichatbot.ignitx.solutions/
-curl https://aichatbot.ignitx.solutions/health
+curl https://aichatbot.ethosystech.com/
+curl https://aichatbot.ethosystech.com/health
 ```
 
 Then check in a browser:
-- `https://aichatbot.ignitx.solutions/admin/` — admin dashboard
+- `https://aichatbot.ethosystech.com/admin/` — admin dashboard
 - Test the chat widget from a host app page
 
 ---
