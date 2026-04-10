@@ -98,7 +98,17 @@
             }
 
             fetch(this.config.apiUrl + "/api/tenants/" + this.config.tenant, fetchOpts)
-                .then(function (r) { return r.ok ? r.json() : null; })
+                .then(function (r) {
+                    if (r.status === 403) {
+                        self._updateWelcome("This chat widget is not authorized to run on this domain.");
+                        return null;
+                    }
+                    if (r.status === 401) {
+                        self._updateWelcome("This chat widget requires a valid API key. Please contact the site administrator.");
+                        return null;
+                    }
+                    return r.ok ? r.json() : null;
+                })
                 .then(function (data) {
                     if (data) {
                         self.config.welcomeMessage = data.welcome_message || self.config.welcomeMessage;
@@ -243,10 +253,10 @@
             });
         },
 
-        _updateWelcome: function () {
+        _updateWelcome: function (message) {
             var messagesEl = document.getElementById("sagedocs-messages");
             if (messagesEl && messagesEl.children.length > 0) {
-                messagesEl.children[0].querySelector(".sagedocs-msg-text").textContent = this.config.welcomeMessage;
+                messagesEl.children[0].querySelector(".sagedocs-msg-text").textContent = message || this.config.welcomeMessage;
             }
         },
 
@@ -425,15 +435,23 @@
                 headers: self._buildHeaders(),
                 body: JSON.stringify(body)
             })
-            .then(function (r) { return r.json(); })
+            .then(function (r) {
+                if (r.status === 403) {
+                    throw new Error("This chat widget is not authorized to run on this domain.");
+                }
+                if (r.status === 401) {
+                    throw new Error("This chat widget requires a valid API key. Please contact the site administrator.");
+                }
+                return r.json();
+            })
             .then(function (data) {
                 self._hideTyping();
                 self.sessionId = data.session_id;
                 self._addMessage("assistant", data.reply, data.sources, data.images);
             })
-            .catch(function () {
+            .catch(function (err) {
                 self._hideTyping();
-                self._addMessage("assistant", "Sorry, something went wrong. Please try again.");
+                self._addMessage("assistant", err.message || "Sorry, something went wrong. Please try again.");
             });
         }
     };
