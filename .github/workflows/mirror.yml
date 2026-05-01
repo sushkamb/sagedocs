@@ -13,6 +13,13 @@ jobs:
         with:
           fetch-depth: 0
 
+      - name: Debug token
+        run: |
+          echo "Token length: ${#FORTE_TOKEN}"
+          echo "First 4 chars: ${FORTE_TOKEN:0:4}"
+        env:
+          FORTE_TOKEN: ${{ secrets.FORTE_TOKEN }}
+
       - name: Mirror to ForteHoldings/ForteAIBot
         run: |
           git remote add forte https://x-access-token:${{ secrets.FORTE_TOKEN }}@github.com/ForteHoldings/ForteAIBot.git
