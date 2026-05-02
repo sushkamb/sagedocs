@@ -12,13 +12,12 @@ jobs:
       - uses: actions/checkout@v4
         with:
           fetch-depth: 0
+          persist-credentials: false
 
       - name: Mirror to ForteHoldings/ForteAIBot
         env:
           FORTE_TOKEN: ${{ secrets.FORTE_TOKEN }}
         run: |
-          git config --global credential.helper store
-          echo "https://x-access-token:${FORTE_TOKEN}@github.com" > ~/.git-credentials
-          git remote add forte https://github.com/ForteHoldings/ForteAIBot.git
-          git push forte --all --force
-          git push forte --tags --force
+          git config --unset-all http.https://github.com/.extraheader || true
+          git push "https://x-access-token:${FORTE_TOKEN}@github.com/ForteHoldings/ForteAIBot.git" --all --force
+          git push "https://x-access-token:${FORTE_TOKEN}@github.com/ForteHoldings/ForteAIBot.git" --tags --force
